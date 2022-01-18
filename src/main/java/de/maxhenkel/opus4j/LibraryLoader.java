@@ -5,7 +5,7 @@ import com.sun.jna.Platform;
 class LibraryLoader {
     private static String nativesPath = "";
 
-    public static String setNativesPath(String path) {
+    public static void setNativesPath(String path) {
         nativesPath = path;
     }
 
