@@ -6,7 +6,7 @@
 
     <groupId>de.maxhenkel.opus4j</groupId>
     <artifactId>opus4j</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
 
     <name>Opus Wrapper for Java</name>
     <url>https://maxhenkel.de</url>
