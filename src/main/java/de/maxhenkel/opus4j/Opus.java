@@ -13,7 +13,26 @@ import java.nio.ShortBuffer;
 
 public interface Opus extends Library {
 
-    Opus INSTANCE = Native.load(NativeLibrary.getInstance(LibraryLoader.getPath()).getFile().getAbsolutePath(), Opus.class);
+    /**
+     * Creates a new Opus instance.
+     * @param path path to natives
+     * @return an instance of Opus
+     */
+    static Opus createInstance(String path) {
+        return Native.load(LibraryLoader.getPath(path), Opus.class);
+    }
+
+    /**
+     * Creates a new Opus instance.
+     * This is a shortcut for {@link #createInstance(String)} with the default path.
+     * @return an instance of Opus
+     */
+    static Opus createInstance() {
+        return Native.load(NativeLibrary.getInstance(LibraryLoader.getPath()).getFile().getAbsolutePath(), Opus.class);
+    }
+
+    @Deprecated
+    Opus INSTANCE = null;
 
     public static final int OPUS_GET_LSB_DEPTH_REQUEST = 4037;
     public static final int OPUS_GET_APPLICATION_REQUEST = 4001;

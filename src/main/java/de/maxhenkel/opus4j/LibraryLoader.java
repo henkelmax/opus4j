@@ -3,15 +3,15 @@ package de.maxhenkel.opus4j;
 import com.sun.jna.Platform;
 
 class LibraryLoader {
-    private static String nativesPath = "";
-
-    public static void setNativesPath(String path) {
-        nativesPath = path;
-    }
 
     public static String getPath() {
         String platform = Platform.RESOURCE_PREFIX;
-        return String.format("%s/natives/%s/libopus.%s", nativesPath, platform, getExtension(platform));
+        return String.format("/natives/%s/libopus.%s", platform, getExtension(platform));
+    }
+
+    public static String getPath(String nativesDir) {
+        String platform = Platform.RESOURCE_PREFIX;
+        return String.format("%s/%s/libopus.%s", nativesDir, platform, getExtension(platform));
     }
 
     private static String getExtension(String platform) {
