@@ -35,7 +35,27 @@ class LibraryLoader {
         }
     }
 
-    private static String getDynamicLibraryExtension() throws UnknownPlatformException {
+    private static String getArchitecture() {
+        switch (OS_ARCH) {
+            case "i386":
+            case "i486":
+            case "i586":
+            case "i686":
+            case "x86":
+            case "x86_32":
+                return "x86";
+            case "amd64":
+            case "x86_64":
+            case "x86-64":
+                return "x64";
+            case "aarch64":
+                return "aarch64";
+            default:
+                return OS_ARCH;
+        }
+    }
+
+    private static String getLibraryExtension() throws UnknownPlatformException {
         if (isWindows()) {
             return "dll";
         } else if (isMac()) {
@@ -47,31 +67,27 @@ class LibraryLoader {
         }
     }
 
-    private static String getStaticLibraryExtension() {
+    private static String getLibraryName(String name) throws UnknownPlatformException {
         if (isWindows()) {
-            return "lib";
+            return String.format("%s.%s", name, getLibraryExtension());
         } else {
-            return "a";
+            return String.format("lib%s.%s", name, getLibraryExtension());
         }
     }
 
-    private static String getLibraryExtension(boolean dynamic) throws UnknownPlatformException {
-        return dynamic ? getDynamicLibraryExtension() : getStaticLibraryExtension();
-    }
-
     private static String getNativeFolderName() throws UnknownPlatformException {
-        return String.format("%s-%s", getPlatform(), OS_ARCH);
+        return String.format("%s-%s", getPlatform(), getArchitecture());
     }
 
-    private static String getResourcePath(String libName, boolean dynamic) throws UnknownPlatformException {
-        return String.format("natives/%s/%s.%s", getNativeFolderName(), libName, getLibraryExtension(dynamic));
+    private static String getResourcePath(String libName) throws UnknownPlatformException {
+        return String.format("natives/%s/%s", getNativeFolderName(), getLibraryName(libName));
     }
 
-    public static void load(String libraryName, boolean dynamic) throws UnknownPlatformException, IOException {
-        File tempFile = File.createTempFile(libraryName, String.format(".%s", getLibraryExtension(dynamic)));
+    public static void load(String libraryName) throws UnknownPlatformException, IOException {
+        File tempFile = File.createTempFile(libraryName, String.format(".%s", getLibraryExtension()));
         tempFile.deleteOnExit();
 
-        try (InputStream in = LibraryLoader.class.getClassLoader().getResourceAsStream(getResourcePath(libraryName, dynamic))) {
+        try (InputStream in = LibraryLoader.class.getClassLoader().getResourceAsStream(getResourcePath(libraryName))) {
             if (in == null) {
                 throw new UnknownPlatformException(String.format("Could not find %s natives for platform %s", libraryName, getNativeFolderName()));
             }
@@ -82,10 +98,6 @@ class LibraryLoader {
         } catch (UnsatisfiedLinkError e) {
             throw new UnknownPlatformException(String.format("Could not load %s natives for %s", libraryName, getNativeFolderName()), e);
         }
-    }
-
-    public static void load(String libraryName) throws IOException, UnknownPlatformException {
-        load(libraryName, true);
     }
 
 }
