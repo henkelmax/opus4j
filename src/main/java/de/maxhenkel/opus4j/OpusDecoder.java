@@ -32,6 +32,10 @@ public class OpusDecoder implements AutoCloseable {
         return decode(input, false);
     }
 
+    public short[] decodeFec() {
+        return decode(null, true);
+    }
+
     public native void resetState();
 
     private native void destroyDecoder();
