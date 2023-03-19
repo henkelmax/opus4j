@@ -16,7 +16,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder(mut env: JN
         1 => Channels::Mono,
         2 => Channels::Stereo,
         _ => {
-            throw_runtime_exception(&mut env, format!("Invalid number of channels: {}", channels));
+            let _ = env.throw(("java/lang/IllegalArgumentException", format!("Invalid number of channels: {}", channels)));
             return 0;
         }
     };
