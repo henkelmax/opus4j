@@ -42,6 +42,11 @@ public class OpusEncoder implements AutoCloseable {
         return encoder == 0L;
     }
 
+    @Override
+    public String toString() {
+        return String.format("OpusEncoder[%d]", encoder);
+    }
+
     public static enum Application {
         VOIP(0),
         AUDIO(1),
