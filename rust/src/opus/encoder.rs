@@ -207,8 +207,8 @@ fn get_encoder(env: &mut JNIEnv, obj: &JObject) -> Option<&'static mut EncoderWr
 }
 
 fn create_pointer(encoder: EncoderWrapper) -> jlong {
-    let decoder = Box::new(encoder);
-    let raw = Box::into_raw(decoder);
+    let encoder = Box::new(encoder);
+    let raw = Box::into_raw(encoder);
     return raw as jlong;
 }
 
