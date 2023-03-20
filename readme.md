@@ -1,6 +1,6 @@
 # Opus4J
 
-A Java wrapper for the [Opus Codec](https://opus-codec.org/) written in Rust.
+A Java wrapper for the [Opus Codec](https://opus-codec.org/) written in Rust using JNI.
 
 ## Usage
 
