@@ -83,9 +83,15 @@ class LibraryLoader {
         return String.format("natives/%s/%s", getNativeFolderName(), getLibraryName(libName));
     }
 
+    private static File getTempDir() {
+        return new File(System.getProperty("java.io.tmpdir"));
+    }
+
     public static void load(String libraryName) throws UnknownPlatformException, IOException {
-        File tempFile = File.createTempFile(libraryName, String.format(".%s", getLibraryExtension()));
-        tempFile.deleteOnExit();
+        File tempDir = new File(getTempDir(), libraryName);
+        tempDir.mkdirs();
+
+        File tempFile = new File(tempDir, getLibraryName(libraryName));
 
         try (InputStream in = LibraryLoader.class.getClassLoader().getResourceAsStream(getResourcePath(libraryName))) {
             if (in == null) {
