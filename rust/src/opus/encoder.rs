@@ -2,6 +2,7 @@ use jni::{JNIEnv};
 use jni::objects::{JByteArray, JClass, JObject, JShortArray, JValue};
 use jni::sys::{jbyte, jint, jlong, jshort};
 use opus::{Application, Channels, Encoder};
+use crate::opus::exceptions::{throw_illegal_argument_exception, throw_illegal_state_exception, throw_io_exception, throw_runtime_exception};
 
 const DEFAULT_PAYLOAD_SIZE: u32 = 1024;
 
@@ -16,7 +17,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder(mut env: JN
         1 => Channels::Mono,
         2 => Channels::Stereo,
         _ => {
-            let _ = env.throw(("java/lang/IllegalArgumentException", format!("Invalid number of channels: {}", channels)));
+            throw_illegal_argument_exception(&mut env, format!("Invalid number of channels: {}", channels));
             return 0;
         }
     };
@@ -24,7 +25,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder(mut env: JN
     let application = match env.get_field(application, "value", "I") {
         Ok(application) => application,
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed to get application: {}", e));
+            throw_io_exception(&mut env, format!("Failed to get application: {}", e));
             return 0;
         }
     };
@@ -32,7 +33,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder(mut env: JN
     let application = match application.i() {
         Ok(application) => application,
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed to convert application to int: {}", e));
+            throw_io_exception(&mut env, format!("Failed to get application: {}", e));
             return 0;
         }
     };
@@ -46,7 +47,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder(mut env: JN
     let encoder = match Encoder::new(sample_rate as u32, channels, application) {
         Ok(encoder) => encoder,
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed to create encoder: {}", e.description()));
+            throw_io_exception(&mut env, format!("Failed to create encoder: {}", e.description()));
             return 0;
         }
     };
@@ -59,7 +60,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder(mut env: JN
 #[no_mangle]
 pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize(mut env: JNIEnv, obj: JObject, max_payload_size: jint) {
     if max_payload_size <= 0 {
-        let _ = env.throw(("java/lang/IllegalArgumentException", format!("Invalid maximum payload size: {}", max_payload_size)));
+        throw_illegal_argument_exception(&mut env, format!("Invalid maximum payload size: {}", max_payload_size));
         return;
     }
 
@@ -200,7 +201,7 @@ fn get_encoder_from_pointer(pointer: jlong) -> &'static mut EncoderWrapper {
 fn get_encoder(env: &mut JNIEnv, obj: &JObject) -> Option<&'static mut EncoderWrapper> {
     let pointer = get_pointer(env, obj);
     if pointer == 0 {
-        let _ = env.throw(("java/lang/IllegalStateException", "Encoder is closed"));
+        throw_illegal_state_exception(env, "Encoder is closed");
         return None;
     }
     return Some(get_encoder_from_pointer(pointer));
@@ -210,8 +211,4 @@ fn create_pointer(encoder: EncoderWrapper) -> jlong {
     let encoder = Box::new(encoder);
     let raw = Box::into_raw(encoder);
     return raw as jlong;
-}
-
-fn throw_runtime_exception(env: &mut JNIEnv, message: String) {
-    let _ = env.throw(("java/lang/RuntimeException", message));
 }

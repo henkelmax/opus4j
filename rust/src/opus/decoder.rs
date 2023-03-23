@@ -2,6 +2,7 @@ use jni::{JNIEnv};
 use jni::objects::{JByteArray, JClass, JObject, JShortArray, JValue};
 use jni::sys::{jboolean, jint, jlong};
 use opus::{Channels, Decoder};
+use crate::opus::exceptions::{throw_illegal_argument_exception, throw_illegal_state_exception, throw_io_exception, throw_runtime_exception};
 
 const DEFAULT_FRAME_SIZE: u32 = 960;
 
@@ -17,14 +18,14 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder(mut env: JN
         1 => Channels::Mono,
         2 => Channels::Stereo,
         _ => {
-            let _ = env.throw(("java/lang/IllegalArgumentException", format!("Invalid number of channels: {}", channels)));
+            throw_illegal_argument_exception(&mut env, format!("Invalid number of channels: {}", channels));
             return 0;
         }
     };
     let decoder = match Decoder::new(sample_rate as u32, channels) {
         Ok(decoder) => decoder,
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed to create decoder: {}", e.description()));
+            throw_io_exception(&mut env, format!("Failed to create decoder: {}", e.description()));
             return 0;
         }
     };
@@ -38,7 +39,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder(mut env: JN
 #[no_mangle]
 pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_setFrameSize(mut env: JNIEnv, obj: JObject, frame_size: jint) {
     if frame_size <= 0 {
-        let _ = env.throw(("java/lang/IllegalArgumentException", format!("Invalid frame size: {}", frame_size)));
+        throw_illegal_argument_exception(&mut env, format!("Invalid frame size: {}", frame_size));
         return;
     }
 
@@ -57,7 +58,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_getFrameSize(mut env: JNI
     let decoder = match get_decoder(&mut env, &obj) {
         Some(encoder) => encoder,
         None => {
-            throw_runtime_exception(&mut env, "Failed to read frame size".to_owned());
+            throw_runtime_exception(&mut env, "Failed to read frame size");
             return 0;
         }
     };
@@ -181,7 +182,7 @@ fn get_decoder_from_pointer(pointer: jlong) -> &'static mut DecoderWrapper {
 fn get_decoder(env: &mut JNIEnv, obj: &JObject) -> Option<&'static mut DecoderWrapper> {
     let pointer = get_pointer(env, obj);
     if pointer == 0 {
-        let _ = env.throw(("java/lang/IllegalStateException", "Decoder is closed"));
+        throw_illegal_state_exception(env, "Decoder is closed");
         return None;
     }
     return Some(get_decoder_from_pointer(pointer));
@@ -191,8 +192,4 @@ fn create_pointer(decoder: DecoderWrapper) -> jlong {
     let decoder = Box::new(decoder);
     let raw = Box::into_raw(decoder);
     return raw as jlong;
-}
-
-fn throw_runtime_exception(env: &mut JNIEnv, message: String) {
-    let _ = env.throw(("java/lang/RuntimeException", message));
 }

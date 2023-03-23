@@ -20,7 +20,7 @@ public class OpusEncoder implements AutoCloseable {
         encoder = createEncoder(sampleRate, channels, application);
     }
 
-    private static native long createEncoder(int sampleRate, int channels, Application application);
+    private static native long createEncoder(int sampleRate, int channels, Application application) throws IOException;
 
     public native void setMaxPayloadSize(int maxPayloadSize);
 

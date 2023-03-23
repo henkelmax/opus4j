@@ -20,7 +20,7 @@ public class OpusDecoder implements AutoCloseable {
         decoder = createDecoder(sampleRate, channels);
     }
 
-    private static native long createDecoder(int sampleRate, int channels);
+    private static native long createDecoder(int sampleRate, int channels) throws IOException;
 
     public native void setFrameSize(int frameSize);
 
