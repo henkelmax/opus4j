@@ -13,7 +13,7 @@ struct DecoderWrapper {
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder(mut env: JNIEnv, _class: JClass, sample_rate: jint, channels: jint) -> jlong {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder0(mut env: JNIEnv, _class: JClass, sample_rate: jint, channels: jint) -> jlong {
     let channels = match channels {
         1 => Channels::Mono,
         2 => Channels::Stereo,
@@ -37,7 +37,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder(mut env: JN
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_setFrameSize(mut env: JNIEnv, obj: JObject, frame_size: jint) {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_setFrameSize0(mut env: JNIEnv, obj: JObject, frame_size: jint) {
     if frame_size <= 0 {
         throw_illegal_argument_exception(&mut env, format!("Invalid frame size: {}", frame_size));
         return;
@@ -54,7 +54,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_setFrameSize(mut env: JNI
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_getFrameSize(mut env: JNIEnv, obj: JObject) -> jint {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_getFrameSize0(mut env: JNIEnv, obj: JObject) -> jint {
     let decoder = match get_decoder(&mut env, &obj) {
         Some(encoder) => encoder,
         None => {
@@ -67,7 +67,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_getFrameSize(mut env: JNI
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_decode<'a>(mut env: JNIEnv<'a>, obj: JObject<'a>, input: JByteArray<'a>, fec: jboolean) -> JShortArray<'a> {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_decode0<'a>(mut env: JNIEnv<'a>, obj: JObject<'a>, input: JByteArray<'a>, fec: jboolean) -> JShortArray<'a> {
     let decoder = match get_decoder(&mut env, &obj) {
         Some(decoder) => decoder,
         None => {
@@ -129,7 +129,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_decode<'a>(mut env: JNIEn
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_resetState(mut env: JNIEnv, obj: JObject) {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_resetState0(mut env: JNIEnv, obj: JObject) {
     let decoder = match get_decoder(&mut env, &obj) {
         Some(decoder) => decoder,
         None => {
@@ -145,7 +145,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_resetState(mut env: JNIEn
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_destroyDecoder(mut env: JNIEnv, obj: JObject) {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_destroyDecoder0(mut env: JNIEnv, obj: JObject) {
     let pointer = get_pointer(&mut env, &obj);
 
     if pointer == 0 {

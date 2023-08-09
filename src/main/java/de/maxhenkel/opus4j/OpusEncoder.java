@@ -17,34 +17,64 @@ public class OpusEncoder implements AutoCloseable {
      */
     public OpusEncoder(int sampleRate, int channels, Application application) throws IOException, UnknownPlatformException {
         Opus.load();
-        encoder = createEncoder(sampleRate, channels, application);
+        encoder = createEncoder0(sampleRate, channels, application);
     }
 
-    private static native long createEncoder(int sampleRate, int channels, Application application) throws IOException;
+    private static native long createEncoder0(int sampleRate, int channels, Application application) throws IOException;
 
-    public native void setMaxPayloadSize(int maxPayloadSize);
+    private native void setMaxPayloadSize0(int maxPayloadSize);
 
-    public native int getMaxPayloadSize();
+    public void setMaxPayloadSize(int maxPayloadSize) {
+        synchronized (this) {
+            setMaxPayloadSize0(maxPayloadSize);
+        }
+    }
 
-    public native byte[] encode(short[] input);
+    private native int getMaxPayloadSize0();
 
-    public native void resetState();
+    public int getMaxPayloadSize() {
+        synchronized (this) {
+            return getMaxPayloadSize0();
+        }
+    }
 
-    private native void destroyEncoder();
+    private native byte[] encode0(short[] input);
+
+    public byte[] encode(short[] input) {
+        synchronized (this) {
+            return encode0(input);
+        }
+    }
+
+    private native void resetState0();
+
+    public void resetState() {
+        synchronized (this) {
+            resetState0();
+        }
+    }
+
+    private native void destroyEncoder0();
 
     @Override
     public void close() {
-        destroyEncoder();
-        encoder = 0L;
+        synchronized (this) {
+            destroyEncoder0();
+            encoder = 0L;
+        }
     }
 
     public boolean isClosed() {
-        return encoder == 0L;
+        synchronized (this) {
+            return encoder == 0L;
+        }
     }
 
     @Override
     public String toString() {
-        return String.format("OpusEncoder[%d]", encoder);
+        synchronized (this) {
+            return String.format("OpusEncoder[%d]", encoder);
+        }
     }
 
     public static enum Application {

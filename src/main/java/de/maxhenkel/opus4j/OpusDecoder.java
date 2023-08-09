@@ -17,16 +17,34 @@ public class OpusDecoder implements AutoCloseable {
      */
     public OpusDecoder(int sampleRate, int channels) throws IOException, UnknownPlatformException {
         Opus.load();
-        decoder = createDecoder(sampleRate, channels);
+        decoder = createDecoder0(sampleRate, channels);
     }
 
-    private static native long createDecoder(int sampleRate, int channels) throws IOException;
+    private static native long createDecoder0(int sampleRate, int channels) throws IOException;
 
-    public native void setFrameSize(int frameSize);
+    private native void setFrameSize0(int frameSize);
 
-    public native int getFrameSize();
+    public void setFrameSize(int frameSize) {
+        synchronized (this) {
+            setFrameSize0(frameSize);
+        }
+    }
 
-    public native short[] decode(@Nullable byte[] input, boolean fec);
+    private native int getFrameSize0();
+
+    public int getFrameSize() {
+        synchronized (this) {
+            return getFrameSize0();
+        }
+    }
+
+    private native short[] decode0(@Nullable byte[] input, boolean fec);
+
+    public short[] decode(@Nullable byte[] input, boolean fec) {
+        synchronized (this) {
+            return decode0(input, fec);
+        }
+    }
 
     public short[] decode(@Nullable byte[] input) {
         return decode(input, false);
@@ -36,22 +54,34 @@ public class OpusDecoder implements AutoCloseable {
         return decode(null, true);
     }
 
-    public native void resetState();
+    private native void resetState0();
 
-    private native void destroyDecoder();
+    public void resetState() {
+        synchronized (this) {
+            resetState0();
+        }
+    }
+
+    private native void destroyDecoder0();
 
     @Override
     public void close() {
-        destroyDecoder();
-        decoder = 0L;
+        synchronized (this) {
+            destroyDecoder0();
+            decoder = 0L;
+        }
     }
 
     public boolean isClosed() {
-        return decoder == 0L;
+        synchronized (this) {
+            return decoder == 0L;
+        }
     }
 
     @Override
     public String toString() {
-        return String.format("OpusDecoder[%d]", decoder);
+        synchronized (this) {
+            return String.format("OpusDecoder[%d]", decoder);
+        }
     }
 }

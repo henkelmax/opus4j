@@ -12,7 +12,7 @@ struct EncoderWrapper {
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder(mut env: JNIEnv, _class: JClass, sample_rate: jint, channels: jint, application: JObject) -> jlong {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(mut env: JNIEnv, _class: JClass, sample_rate: jint, channels: jint, application: JObject) -> jlong {
     let channels = match channels {
         1 => Channels::Mono,
         2 => Channels::Stereo,
@@ -58,7 +58,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder(mut env: JN
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize(mut env: JNIEnv, obj: JObject, max_payload_size: jint) {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize0(mut env: JNIEnv, obj: JObject, max_payload_size: jint) {
     if max_payload_size <= 0 {
         throw_illegal_argument_exception(&mut env, format!("Invalid maximum payload size: {}", max_payload_size));
         return;
@@ -75,7 +75,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize(mut env
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize(mut env: JNIEnv, obj: JObject) -> jint {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize0(mut env: JNIEnv, obj: JObject) -> jint {
     let encoder = match get_encoder(&mut env, &obj) {
         Some(encoder) => encoder,
         None => {
@@ -88,7 +88,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize(mut env
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_encode<'a>(mut env: JNIEnv<'a>, obj: JObject<'a>, input: JShortArray<'a>) -> JByteArray<'a> {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_encode0<'a>(mut env: JNIEnv<'a>, obj: JObject<'a>, input: JShortArray<'a>) -> JByteArray<'a> {
     let encoder = match get_encoder(&mut env, &obj) {
         Some(encoder) => encoder,
         None => {
@@ -148,7 +148,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_encode<'a>(mut env: JNIEn
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_resetState(mut env: JNIEnv, obj: JObject) {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_resetState0(mut env: JNIEnv, obj: JObject) {
     let encoder = match get_encoder(&mut env, &obj) {
         Some(decoder) => decoder,
         None => {
@@ -164,7 +164,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_resetState(mut env: JNIEn
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_destroyEncoder(mut env: JNIEnv, obj: JObject) {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_destroyEncoder0(mut env: JNIEnv, obj: JObject) {
     let pointer = get_pointer(&mut env, &obj);
 
     if pointer == 0 {
