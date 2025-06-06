@@ -43,7 +43,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_setFrameSize0(mut env: JN
         return;
     }
 
-    let mut decoder = match get_decoder(&mut env, &obj) {
+    let decoder = match get_decoder(&mut env, &obj) {
         Some(encoder) => encoder,
         None => {
             return;

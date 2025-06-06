@@ -64,7 +64,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize0(mut en
         return;
     }
 
-    let mut encoder = match get_encoder(&mut env, &obj) {
+    let encoder = match get_encoder(&mut env, &obj) {
         Some(encoder) => encoder,
         None => {
             return;
