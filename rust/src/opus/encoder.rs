@@ -1,23 +1,92 @@
-use jni::{JNIEnv};
 use jni::objects::{JByteArray, JClass, JObject, JShortArray, JValue};
 use jni::sys::{jbyte, jint, jlong, jshort};
-use opus::{Application, Channels, Encoder};
-use crate::opus::exceptions::{throw_illegal_argument_exception, throw_illegal_state_exception, throw_io_exception, throw_runtime_exception};
+use jni::JNIEnv;
+use std::ffi::c_int;
+
+extern crate libopus_sys as opus;
+
+use crate::opus::decoder::Channels;
+use crate::opus::exceptions::{
+    throw_illegal_argument_exception, throw_illegal_state_exception, throw_io_exception,
+    throw_runtime_exception, translate_error,
+};
 
 const DEFAULT_PAYLOAD_SIZE: u32 = 1024;
 
-struct EncoderWrapper {
-    encoder: Encoder,
+#[derive(Debug)]
+struct Encoder {
+    encoder: *mut opus::OpusEncoder,
+    channels: Channels,
     max_payload_size: u32,
 }
 
+impl Encoder {
+    pub fn new(sample_rate: u32, channels: Channels, mode: u32) -> Result<Encoder, i32> {
+        let mut error = 0;
+        let encoder = unsafe {
+            opus::opus_encoder_create(
+                sample_rate as i32,
+                channels as c_int,
+                mode as c_int,
+                &mut error,
+            )
+        };
+        if error as u32 != opus::OPUS_OK || encoder.is_null() {
+            Err(error)
+        } else {
+            Ok(Encoder {
+                encoder,
+                channels,
+                max_payload_size: DEFAULT_PAYLOAD_SIZE,
+            })
+        }
+    }
+
+    pub fn encode(&mut self, input: &[i16], output: &mut [u8]) -> Result<usize, i32> {
+        let frame_size = (input.len() as c_int) / (self.channels as c_int);
+
+        let result = unsafe {
+            opus::opus_encode(
+                self.encoder,
+                input.as_ptr(),
+                frame_size,
+                output.as_mut_ptr(),
+                output.len() as c_int,
+            )
+        };
+
+        if result < 0 {
+            return Err(result);
+        }
+        Ok(result as usize)
+    }
+
+    fn reset_state(&mut self) -> Result<(), i32> {
+        return match unsafe {
+            opus::opus_encoder_ctl(self.encoder, opus::OPUS_RESET_STATE as c_int)
+        } {
+            code if code < 0 => Err(code),
+            _ => Ok(()),
+        };
+    }
+}
+
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(mut env: JNIEnv, _class: JClass, sample_rate: jint, channels: jint, application: JObject) -> jlong {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(
+    mut env: JNIEnv,
+    _class: JClass,
+    sample_rate: jint,
+    channels: jint,
+    application: JObject,
+) -> jlong {
     let channels = match channels {
         1 => Channels::Mono,
         2 => Channels::Stereo,
         _ => {
-            throw_illegal_argument_exception(&mut env, format!("Invalid number of channels: {}", channels));
+            throw_illegal_argument_exception(
+                &mut env,
+                format!("Invalid number of channels: {}", channels),
+            );
             return 0;
         }
     };
@@ -39,28 +108,35 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(mut env: J
     };
 
     let application = match application {
-        1 => Application::Audio,
-        2 => Application::LowDelay,
-        _ => Application::Voip,
+        1 => opus::OPUS_APPLICATION_VOIP,
+        2 => opus::OPUS_APPLICATION_RESTRICTED_LOWDELAY,
+        _ => opus::OPUS_APPLICATION_VOIP,
     };
 
     let encoder = match Encoder::new(sample_rate as u32, channels, application) {
         Ok(encoder) => encoder,
         Err(e) => {
-            throw_io_exception(&mut env, format!("Failed to create encoder: {}", e.description()));
+            throw_io_exception(
+                &mut env,
+                format!("Failed to create encoder: {}", translate_error(e)),
+            );
             return 0;
         }
     };
-    return create_pointer(EncoderWrapper {
-        encoder,
-        max_payload_size: DEFAULT_PAYLOAD_SIZE,
-    });
+    return create_pointer(encoder);
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize0(mut env: JNIEnv, obj: JObject, max_payload_size: jint) {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize0(
+    mut env: JNIEnv,
+    obj: JObject,
+    max_payload_size: jint,
+) {
     if max_payload_size <= 0 {
-        throw_illegal_argument_exception(&mut env, format!("Invalid maximum payload size: {}", max_payload_size));
+        throw_illegal_argument_exception(
+            &mut env,
+            format!("Invalid maximum payload size: {}", max_payload_size),
+        );
         return;
     }
 
@@ -75,7 +151,10 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize0(mut en
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize0(mut env: JNIEnv, obj: JObject) -> jint {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize0(
+    mut env: JNIEnv,
+    obj: JObject,
+) -> jint {
     let encoder = match get_encoder(&mut env, &obj) {
         Some(encoder) => encoder,
         None => {
@@ -88,7 +167,11 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize0(mut en
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_encode0<'a>(mut env: JNIEnv<'a>, obj: JObject<'a>, input: JShortArray<'a>) -> JByteArray<'a> {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_encode0<'a>(
+    mut env: JNIEnv<'a>,
+    obj: JObject<'a>,
+    input: JShortArray<'a>,
+) -> JByteArray<'a> {
     let encoder = match get_encoder(&mut env, &obj) {
         Some(encoder) => encoder,
         None => {
@@ -116,10 +199,13 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_encode0<'a>(mut env: JNIE
 
     let mut output = vec![0u8; encoder.max_payload_size as usize];
 
-    let len = match encoder.encoder.encode(&short_array, &mut output) {
+    let len = match encoder.encode(&short_array, &mut output) {
         Ok(len) => len,
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed to encode: {}", e.description()));
+            throw_runtime_exception(
+                &mut env,
+                format!("Failed to encode: {}", translate_error(e)),
+            );
             return JByteArray::from(JObject::null());
         }
     };
@@ -155,23 +241,29 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_resetState0(mut env: JNIE
             return;
         }
     };
-    match encoder.encoder.reset_state() {
+    match encoder.reset_state() {
         Ok(_) => {}
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed to reset state: {}", e.description()));
+            throw_runtime_exception(
+                &mut env,
+                format!("Failed to reset state: {}", translate_error(e)),
+            );
         }
     }
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_destroyEncoder0(mut env: JNIEnv, obj: JObject) {
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_destroyEncoder0(
+    mut env: JNIEnv,
+    obj: JObject,
+) {
     let pointer = get_pointer(&mut env, &obj);
 
     if pointer == 0 {
         return;
     }
 
-    let _ = unsafe { Box::from_raw(pointer as *mut EncoderWrapper) };
+    let _ = unsafe { Box::from_raw(pointer as *mut Encoder) };
     let _ = env.set_field(obj, "encoder", "J", JValue::from(jlong::from(0)));
 }
 
@@ -186,19 +278,22 @@ fn get_pointer(env: &mut JNIEnv, obj: &JObject) -> jlong {
     let long = match pointer.j() {
         Ok(long) => long,
         Err(e) => {
-            throw_runtime_exception(env, format!("Failed to convert decoder pointer to long: {}", e));
+            throw_runtime_exception(
+                env,
+                format!("Failed to convert decoder pointer to long: {}", e),
+            );
             return 0;
         }
     };
     return long;
 }
 
-fn get_encoder_from_pointer(pointer: jlong) -> &'static mut EncoderWrapper {
-    let encoder = unsafe { &mut *(pointer as *mut EncoderWrapper) };
+fn get_encoder_from_pointer(pointer: jlong) -> &'static mut Encoder {
+    let encoder = unsafe { &mut *(pointer as *mut Encoder) };
     return encoder;
 }
 
-fn get_encoder(env: &mut JNIEnv, obj: &JObject) -> Option<&'static mut EncoderWrapper> {
+fn get_encoder(env: &mut JNIEnv, obj: &JObject) -> Option<&'static mut Encoder> {
     let pointer = get_pointer(env, obj);
     if pointer == 0 {
         throw_illegal_state_exception(env, "Encoder is closed");
@@ -207,7 +302,7 @@ fn get_encoder(env: &mut JNIEnv, obj: &JObject) -> Option<&'static mut EncoderWr
     return Some(get_encoder_from_pointer(pointer));
 }
 
-fn create_pointer(encoder: EncoderWrapper) -> jlong {
+fn create_pointer(encoder: Encoder) -> jlong {
     let encoder = Box::new(encoder);
     let raw = Box::into_raw(encoder);
     return raw as jlong;

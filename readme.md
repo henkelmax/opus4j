@@ -91,5 +91,5 @@ decoder.close();
 ## Credits
 
 - [Opus](https://opus-codec.org/)
-- [opus-rs](https://github.com/SpaceManiac/opus-rs)
+- [libopus_sys](https://github.com/cijiugechu/libopus_sys)
 - [jni-rs](https://github.com/jni-rs/jni-rs)
