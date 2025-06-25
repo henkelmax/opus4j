@@ -17,11 +17,11 @@ const DEFAULT_FRAME_SIZE: u32 = 960;
 struct Decoder {
     decoder: *mut opus::OpusDecoder,
     frame_size: u32,
-    channels: Channels,
+    channels: u32,
 }
 
 impl Decoder {
-    pub fn new(sample_rate: u32, frame_size: u32, channels: Channels) -> Result<Decoder, i32> {
+    pub fn new(sample_rate: u32, frame_size: u32, channels: u32) -> Result<Decoder, i32> {
         let mut error = 0;
         let decoder =
             unsafe { opus::opus_decoder_create(sample_rate as i32, channels as c_int, &mut error) };
@@ -78,12 +78,6 @@ impl Decoder {
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-pub enum Channels {
-    Mono = 1,
-    Stereo = 2,
-}
-
 #[no_mangle]
 pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder0(
     mut env: JNIEnv,
@@ -91,18 +85,14 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder0(
     sample_rate: jint,
     channels: jint,
 ) -> jlong {
-    let channels = match channels {
-        1 => Channels::Mono,
-        2 => Channels::Stereo,
-        _ => {
-            throw_illegal_argument_exception(
-                &mut env,
-                format!("Invalid number of channels: {}", channels),
-            );
-            return 0;
-        }
-    };
-    let decoder = match Decoder::new(sample_rate as u32, DEFAULT_FRAME_SIZE, channels) {
+    if channels != 1 && channels != 2 {
+        throw_illegal_argument_exception(
+            &mut env,
+            format!("Invalid number of channels: {}", channels),
+        );
+        return 0;
+    }
+    let decoder = match Decoder::new(sample_rate as u32, DEFAULT_FRAME_SIZE, channels as u32) {
         Ok(decoder) => decoder,
         Err(e) => {
             throw_io_exception(

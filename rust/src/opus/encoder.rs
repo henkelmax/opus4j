@@ -5,7 +5,6 @@ use std::ffi::c_int;
 
 extern crate libopus_sys as opus;
 
-use crate::opus::decoder::Channels;
 use crate::opus::exceptions::{
     throw_illegal_argument_exception, throw_illegal_state_exception, throw_io_exception,
     throw_runtime_exception, translate_error,
@@ -16,12 +15,12 @@ const DEFAULT_PAYLOAD_SIZE: u32 = 1024;
 #[derive(Debug)]
 struct Encoder {
     encoder: *mut opus::OpusEncoder,
-    channels: Channels,
+    channels: u32,
     max_payload_size: u32,
 }
 
 impl Encoder {
-    pub fn new(sample_rate: u32, channels: Channels, mode: u32) -> Result<Encoder, i32> {
+    pub fn new(sample_rate: u32, channels: u32, mode: u32) -> Result<Encoder, i32> {
         let mut error = 0;
         let encoder = unsafe {
             opus::opus_encoder_create(
@@ -79,17 +78,13 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(
     channels: jint,
     application: JObject,
 ) -> jlong {
-    let channels = match channels {
-        1 => Channels::Mono,
-        2 => Channels::Stereo,
-        _ => {
-            throw_illegal_argument_exception(
-                &mut env,
-                format!("Invalid number of channels: {}", channels),
-            );
-            return 0;
-        }
-    };
+    if channels != 1 && channels != 2 {
+        throw_illegal_argument_exception(
+            &mut env,
+            format!("Invalid number of channels: {}", channels),
+        );
+        return 0;
+    }
 
     let application = match env.get_field(application, "value", "I") {
         Ok(application) => application,
@@ -113,7 +108,7 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(
         _ => opus::OPUS_APPLICATION_VOIP,
     };
 
-    let encoder = match Encoder::new(sample_rate as u32, channels, application) {
+    let encoder = match Encoder::new(sample_rate as u32, channels as u32, application) {
         Ok(encoder) => encoder,
         Err(e) => {
             throw_io_exception(
