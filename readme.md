@@ -10,7 +10,7 @@ A Java wrapper for the [Opus Codec](https://opus-codec.org/) written in Rust usi
 <dependency>
   <groupId>de.maxhenkel.opus4j</groupId>
   <artifactId>opus4j</artifactId>
-  <version>2.0.3</version>
+  <version>2.0.4</version>
 </dependency>
 
 <repositories>
@@ -25,7 +25,7 @@ A Java wrapper for the [Opus Codec](https://opus-codec.org/) written in Rust usi
 
 ``` groovy
 dependencies {
-  implementation 'de.maxhenkel.opus4j:opus4j:2.0.3'
+  implementation 'de.maxhenkel.opus4j:opus4j:2.0.4'
 }
 
 repositories {
