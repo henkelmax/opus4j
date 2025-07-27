@@ -1,6 +1,6 @@
 # Opus4J
 
-A Java wrapper for the [Opus Codec](https://opus-codec.org/) written in Rust using JNI.
+A Java wrapper for the [Opus Codec](https://opus-codec.org/) written in C using JNI.
 
 ## Usage
 
@@ -91,5 +91,3 @@ decoder.close();
 ## Credits
 
 - [Opus](https://opus-codec.org/)
-- [libopus_sys](https://github.com/cijiugechu/libopus_sys)
-- [jni-rs](https://github.com/jni-rs/jni-rs)
