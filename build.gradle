@@ -1,0 +1,57 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.linguica.maven-settings' version "${maven_settings_version}"
+}
+
+group = 'de.maxhenkel.opus4j'
+archivesBaseName = 'opus4j'
+version = library_version
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+    withSourcesJar()
+    withJavadocJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+
+    testImplementation platform("org.junit:junit-bom:${junit_version}")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation 'org.junit.platform:junit-platform-launcher'
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude '**/*.gitkeep'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            pom {
+                name = 'Opus4J'
+                description = 'Opus Wrapper for Java'
+                url = 'https://maxhenkel.de'
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = 'henkelmax.public'
+            url = uri('https://maven.maxhenkel.de/repository/public')
+        }
+    }
+}

@@ -21,14 +21,35 @@ public class OpusEncoderTest {
     @Test
     @DisplayName("Invalid channel count")
     void invalidChannels() {
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrowsExactly(IllegalArgumentException.class, () -> {
             OpusEncoder encoder = new OpusEncoder(48000, 3, OpusEncoder.Application.VOIP);
             encoder.close();
         });
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrowsExactly(IllegalArgumentException.class, () -> {
             OpusEncoder encoder = new OpusEncoder(48000, 0, OpusEncoder.Application.VOIP);
             encoder.close();
         });
+    }
+
+    @Test
+    @DisplayName("Double close")
+    void doubleClose() throws IOException, UnknownPlatformException {
+        OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP);
+        encoder.encode(new short[960]);
+        encoder.close();
+        encoder.close();
+    }
+
+    @Test
+    @DisplayName("Encode after close")
+    void encodeAfterClose() throws IOException, UnknownPlatformException {
+        OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP);
+        encoder.encode(new short[960]);
+        encoder.close();
+        RuntimeException e = assertThrowsExactly(RuntimeException.class, () -> {
+            encoder.encode(new short[960]);
+        });
+        assertEquals("Failed to get encoder pointer", e.getMessage());
     }
 
 }

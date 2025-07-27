@@ -18,17 +18,17 @@ public class OpusDecoderTest {
         OpusDecoder decoder = new OpusDecoder(48000, 1);
         short[] decoded = decoder.decode(encoded);
         decoder.close();
-        assertEquals(decoded.length, 960);
+        assertEquals(960, decoded.length);
     }
 
     @Test
     @DisplayName("Invalid channel count")
     void invalidChannels() {
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrowsExactly(IllegalArgumentException.class, () -> {
             OpusDecoder decoder = new OpusDecoder(48000, 3);
             decoder.close();
         });
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrowsExactly(IllegalArgumentException.class, () -> {
             OpusDecoder encoder = new OpusDecoder(48000, 0);
             encoder.close();
         });
