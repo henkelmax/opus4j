@@ -52,4 +52,24 @@ public class OpusEncoderTest {
         assertEquals("Encoder is closed", e.getMessage());
     }
 
+    @Test
+    @DisplayName("Invalid sample rate")
+    void invalidSampleRate() {
+        IOException e = assertThrowsExactly(IOException.class, () -> {
+            OpusEncoder encoder = new OpusEncoder(48001, 1, OpusEncoder.Application.VOIP);
+            encoder.close();
+        });
+        assertEquals("Failed to create encoder: OPUS_BAD_ARG", e.getMessage());
+    }
+
+    @Test
+    @DisplayName("Valid sample rates")
+    void validSampleRates() throws IOException, UnknownPlatformException {
+        new OpusEncoder(8000, 1, OpusEncoder.Application.VOIP).close();
+        new OpusEncoder(12000, 1, OpusEncoder.Application.VOIP).close();
+        new OpusEncoder(16000, 1, OpusEncoder.Application.VOIP).close();
+        new OpusEncoder(24000, 1, OpusEncoder.Application.VOIP).close();
+        new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP).close();
+    }
+
 }

@@ -46,4 +46,24 @@ public class OpusDecoderTest {
         assertEquals("Decoder is closed", e.getMessage());
     }
 
+    @Test
+    @DisplayName("Invalid sample rate")
+    void invalidSampleRate() {
+        IOException e = assertThrowsExactly(IOException.class, () -> {
+            OpusDecoder decoder = new OpusDecoder(48001, 1);
+            decoder.close();
+        });
+        assertEquals("Failed to create decoder: OPUS_BAD_ARG", e.getMessage());
+    }
+
+    @Test
+    @DisplayName("Valid sample rates")
+    void validSampleRates() throws IOException, UnknownPlatformException {
+        new OpusDecoder(8000, 1).close();
+        new OpusDecoder(12000, 1).close();
+        new OpusDecoder(16000, 1).close();
+        new OpusDecoder(24000, 1).close();
+        new OpusDecoder(48000, 1).close();
+    }
+
 }
