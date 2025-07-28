@@ -26,6 +26,7 @@ jobs:
         run: |
           chmod +x ./cmake/zig-cc
           chmod +x ./cmake/zig-ar
+          chmod +x ./cmake/zig-ranlib
 
       - name: Build linux-x86_64 natives
         run: |
@@ -51,29 +52,29 @@ jobs:
           name: opus4j-linux-aarch64
           path: ./native/linux-aarch64/libopus4j.so
 
-#      - name: Build macos-x86_64 natives
-#        run: |
-#          mkdir -p macos-x86_64
-#          cd macos-x86_64
-#          cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/zig-x86_64-macos.cmake" .. -G Ninja -DCMAKE_BUILD_TYPE=Release
-#          cmake --build . --config Release
-#      - name: Upload macos-x86_64 natives
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: opus4j-macos-x86_64
-#          path: ./native/macos-x86_64/libopus4j.dylib
+      - name: Build macos-x86_64 natives
+        run: |
+          mkdir -p macos-x86_64
+          cd macos-x86_64
+          cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/zig-x86_64-macos.cmake" .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --config Release
+      - name: Upload macos-x86_64 natives
+        uses: actions/upload-artifact@v4
+        with:
+          name: opus4j-macos-x86_64
+          path: ./native/macos-x86_64/libopus4j.dylib
 
-#      - name: Build macos-aarch64 natives
-#        run: |
-#          mkdir -p macos-aarch64
-#          cd macos-aarch64
-#          cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/zig-aarch64-macos.cmake" .. -G Ninja -DCMAKE_BUILD_TYPE=Release
-#          cmake --build . --config Release
-#      - name: Upload macos-aarch64 natives
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: opus4j-macos-aarch64
-#          path: ./native/macos-aarch64/libopus4j.dylib
+      - name: Build macos-aarch64 natives
+        run: |
+          mkdir -p macos-aarch64
+          cd macos-aarch64
+          cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/zig-aarch64-macos.cmake" .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --config Release
+      - name: Upload macos-aarch64 natives
+        uses: actions/upload-artifact@v4
+        with:
+          name: opus4j-macos-aarch64
+          path: ./native/macos-aarch64/libopus4j.dylib
 
       - name: Build windows-x86_64 natives
         run: |
@@ -111,16 +112,16 @@ jobs:
         with:
           name: opus4j-linux-aarch64
           path: ./src/main/resources/natives/linux-aarch64/
-#      - name: Download macos-x86_64
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: opus4j-macos-x86_64
-#          path: ./src/main/resources/natives/mac-x64/
-#      - name: Download macos-aarch64
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: opus4j-macos-aarch64
-#          path: ./src/main/resources/natives/mac-aarch64/
+      - name: Download macos-x86_64
+        uses: actions/download-artifact@v4
+        with:
+          name: opus4j-macos-x86_64
+          path: ./src/main/resources/natives/mac-x64/
+      - name: Download macos-aarch64
+        uses: actions/download-artifact@v4
+        with:
+          name: opus4j-macos-aarch64
+          path: ./src/main/resources/natives/mac-aarch64/
       - name: Download windows-x86_64
         uses: actions/download-artifact@v4
         with:
