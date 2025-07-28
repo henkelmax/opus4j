@@ -12,10 +12,69 @@ public class OpusEncoderTest {
     @Test
     @DisplayName("Encode")
     void encode() throws IOException, UnknownPlatformException {
-        OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP);
-        byte[] encoded = encoder.encode(new short[960]);
-        encoder.close();
-        assertTrue(encoded.length > 0);
+        try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
+            byte[] encoded1 = encoder.encode(new short[120]);
+            assertTrue(encoded1.length > 0);
+            byte[] encoded2 = encoder.encode(new short[240]);
+            assertTrue(encoded2.length > 0);
+            byte[] encoded3 = encoder.encode(new short[480]);
+            assertTrue(encoded3.length > 0);
+            byte[] encoded4 = encoder.encode(new short[960]);
+            assertTrue(encoded4.length > 0);
+            byte[] encoded5 = encoder.encode(new short[1920]);
+            assertTrue(encoded5.length > 0);
+            byte[] encoded6 = encoder.encode(new short[2880]);
+            assertTrue(encoded6.length > 0);
+        }
+    }
+
+    @Test
+    @DisplayName("Invalid encoding")
+    void invalidEncoding() throws IOException, UnknownPlatformException {
+        try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
+            IOException e1 = assertThrowsExactly(IOException.class, () -> {
+                encoder.encode(new short[0]);
+            });
+            assertEquals("Failed to encode: OPUS_BAD_ARG", e1.getMessage());
+
+            IOException e2 = assertThrowsExactly(IOException.class, () -> {
+                encoder.encode(new short[1]);
+            });
+            assertEquals("Failed to encode: OPUS_BAD_ARG", e2.getMessage());
+
+            IOException e3 = assertThrowsExactly(IOException.class, () -> {
+                encoder.encode(new short[239]);
+            });
+            assertEquals("Failed to encode: OPUS_BAD_ARG", e3.getMessage());
+
+            IOException e4 = assertThrowsExactly(IOException.class, () -> {
+                encoder.encode(new short[961]);
+            });
+            assertEquals("Failed to encode: OPUS_BAD_ARG", e4.getMessage());
+        }
+    }
+
+    @Test
+    @DisplayName("Encode with frame size")
+    void encodeWithFrameSize() throws IOException, UnknownPlatformException {
+        try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
+            encoder.setMaxPayloadSize(1);
+            byte[] encoded = encoder.encode(new short[960]);
+            assertEquals(1, encoded.length);
+            encoder.setMaxPayloadSize(Integer.MAX_VALUE);
+            byte[] encoded2 = encoder.encode(new short[960]);
+            assertTrue(encoded2.length > 0);
+        }
+    }
+
+    @Test
+    @DisplayName("Reset state")
+    void resetState() throws IOException, UnknownPlatformException {
+        try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
+            encoder.encode(new short[960]);
+            encoder.resetState();
+            encoder.encode(new short[960]);
+        }
     }
 
     @Test
@@ -79,6 +138,38 @@ public class OpusEncoderTest {
         assertEquals("libopus", encoder.getOpusVersion().split(" ")[0]);
         assertTrue(encoder.getOpusVersion().matches("libopus \\d+\\.\\d+\\.\\d+"));
         encoder.close();
+    }
+
+    @Test
+    @DisplayName("Invalid maximum payload size")
+    void invalidMaximumPayloadSize() throws IOException, UnknownPlatformException {
+        try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
+            IllegalArgumentException e1 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPayloadSize(0);
+            });
+            assertEquals("Invalid maximum payload size: 0", e1.getMessage());
+            IllegalArgumentException e2 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPayloadSize(-1);
+            });
+            assertEquals("Invalid maximum payload size: -1", e2.getMessage());
+            IllegalArgumentException e3 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPayloadSize(Integer.MIN_VALUE);
+            });
+            assertEquals("Invalid maximum payload size: " + Integer.MIN_VALUE, e3.getMessage());
+        }
+    }
+
+    @Test
+    @DisplayName("Get payload size")
+    void getPayloadSize() throws IOException, UnknownPlatformException {
+        try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
+            encoder.setMaxPayloadSize(1);
+            assertEquals(1, encoder.getMaxPayloadSize());
+            encoder.setMaxPayloadSize(128);
+            assertEquals(128, encoder.getMaxPayloadSize());
+            encoder.setMaxPayloadSize(Integer.MAX_VALUE);
+            assertEquals(Integer.MAX_VALUE, encoder.getMaxPayloadSize());
+        }
     }
 
 }
