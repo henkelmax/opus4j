@@ -1,7 +1,6 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.linguica.maven-settings' version "${maven_settings_version}"
 }
 
 group = 'de.maxhenkel.opus4j'
@@ -52,6 +51,10 @@ publishing {
         maven {
             name = 'henkelmax.public'
             url = uri('https://maven.maxhenkel.de/repository/public')
+            credentials {
+                username System.getenv('MAVEN_USERNAME')
+                password System.getenv('MAVEN_PASSWORD')
+            }
         }
     }
 }
