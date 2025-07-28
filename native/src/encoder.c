@@ -58,7 +58,7 @@ Encoder *get_encoder(
 ) {
     const jlong pointer = get_encoder_pointer(env, obj);
     if (pointer == 0) {
-        throw_runtime_exception(env, "Failed to get encoder pointer");
+        throw_runtime_exception(env, "Encoder is closed");
         return NULL;
     }
     return (Encoder *) (uintptr_t) pointer;

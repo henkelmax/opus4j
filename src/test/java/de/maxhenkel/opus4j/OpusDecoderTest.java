@@ -34,4 +34,16 @@ public class OpusDecoderTest {
         });
     }
 
+    @Test
+    @DisplayName("Decode after close")
+    void encodeAfterClose() throws IOException, UnknownPlatformException {
+        OpusDecoder decoder = new OpusDecoder(48000, 1);
+        decoder.decode(null);
+        decoder.close();
+        RuntimeException e = assertThrowsExactly(RuntimeException.class, () -> {
+            decoder.decode(null);
+        });
+        assertEquals("Decoder is closed", e.getMessage());
+    }
+
 }

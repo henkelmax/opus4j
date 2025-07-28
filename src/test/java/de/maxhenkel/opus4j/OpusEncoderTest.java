@@ -49,7 +49,7 @@ public class OpusEncoderTest {
         RuntimeException e = assertThrowsExactly(RuntimeException.class, () -> {
             encoder.encode(new short[960]);
         });
-        assertEquals("Failed to get encoder pointer", e.getMessage());
+        assertEquals("Encoder is closed", e.getMessage());
     }
 
 }

@@ -55,7 +55,7 @@ Decoder *get_decoder(
 ) {
     const jlong pointer = get_decoder_pointer(env, obj);
     if (pointer == 0) {
-        throw_runtime_exception(env, "Failed to get decoder pointer");
+        throw_runtime_exception(env, "Decoder is closed");
         return NULL;
     }
     return (Decoder *) (uintptr_t) pointer;
