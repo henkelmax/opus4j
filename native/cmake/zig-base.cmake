@@ -1,9 +1,11 @@
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     set(CMAKE_C_COMPILER ${CMAKE_CURRENT_LIST_DIR}/zig-cc.bat)
     set(CMAKE_AR ${CMAKE_CURRENT_LIST_DIR}/zig-ar.bat)
+    set(CMAKE_RANLIB ${CMAKE_CURRENT_LIST_DIR}/zig-ranlib.bat)
 else ()
     set(CMAKE_C_COMPILER ${CMAKE_CURRENT_LIST_DIR}/zig-cc)
     set(CMAKE_AR ${CMAKE_CURRENT_LIST_DIR}/zig-ar)
+    set(CMAKE_RANLIB ${CMAKE_CURRENT_LIST_DIR}/zig-ranlib)
 endif ()
 
 
