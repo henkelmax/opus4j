@@ -72,4 +72,13 @@ public class OpusEncoderTest {
         new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP).close();
     }
 
+    @Test
+    @DisplayName("Get Opus version")
+    void getOpusVersion() throws IOException, UnknownPlatformException {
+        OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP);
+        assertEquals("libopus", encoder.getOpusVersion().split(" ")[0]);
+        assertTrue(encoder.getOpusVersion().matches("libopus \\d+\\.\\d+\\.\\d+"));
+        encoder.close();
+    }
+
 }

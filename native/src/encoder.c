@@ -64,6 +64,13 @@ Encoder *get_encoder(
     return (Encoder *) (uintptr_t) pointer;
 }
 
+JNIEXPORT jstring JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_getOpusVersion0(
+    JNIEnv *env,
+    jclass clazz
+) {
+    return (*env)->NewStringUTF(env, opus_get_version_string());
+}
+
 JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(
     JNIEnv *env,
     jclass clazz,

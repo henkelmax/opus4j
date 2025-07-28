@@ -3,6 +3,11 @@
 
 #include <jni.h>
 
+JNIEXPORT jstring JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_getOpusVersion0(
+    JNIEnv *env,
+    jclass clazz
+);
+
 JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder0(
     JNIEnv *env,
     jclass clazz,
