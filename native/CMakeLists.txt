@@ -2,13 +2,38 @@ cmake_minimum_required(VERSION 3.12)
 
 project(opus4j LANGUAGES C)
 
-find_package(JNI REQUIRED)
+set(JDK_8_VERSION "jdk8u462-ga")
+set(OPUS_VERSION "v1.5.2")
+
+if (WIN32)
+    set(JNI_MD_URL "https://raw.githubusercontent.com/openjdk/jdk8u/refs/tags/${JDK_8_VERSION}/jdk/src/windows/javavm/export/jni_md.h")
+elseif (APPLE)
+    set(JNI_MD_URL "https://raw.githubusercontent.com/openjdk/jdk8u/refs/tags/${JDK_8_VERSION}/jdk/src/macosx/javavm/export/jni_md.h")
+elseif (UNIX)
+    set(JNI_MD_URL "https://raw.githubusercontent.com/openjdk/jdk8u/refs/tags/${JDK_8_VERSION}/jdk/src/solaris/javavm/export/jni_md.h")
+else ()
+    message(WARNING "Unknown OS, not compiling jni_md.h")
+endif ()
+
+file(DOWNLOAD
+        "https://raw.githubusercontent.com/openjdk/jdk8u/refs/tags/${JDK_8_VERSION}/jdk/src/share/javavm/export/jni.h"
+        ${CMAKE_BINARY_DIR}/jni_headers/jni.h
+        SHOW_PROGRESS
+)
+
+if (DEFINED JNI_MD_URL)
+    file(DOWNLOAD
+            ${JNI_MD_URL}
+            ${CMAKE_BINARY_DIR}/jni_headers/jni_md.h
+            SHOW_PROGRESS
+    )
+endif ()
 
 include(FetchContent)
 FetchContent_Declare(
         opus
         GIT_REPOSITORY https://github.com/xiph/opus.git
-        GIT_TAG v1.5.2
+        GIT_TAG ${OPUS_VERSION}
 )
 FetchContent_MakeAvailable(opus)
 
@@ -22,6 +47,7 @@ target_include_directories(opus4j PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${JNI_INCLUDE_DIRS}
         ${opus_SOURCE_DIR}/include
+        ${CMAKE_BINARY_DIR}/jni_headers
 )
 
 target_link_libraries(opus4j PRIVATE

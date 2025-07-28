@@ -1,0 +1,16 @@
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    set(CMAKE_C_COMPILER ${CMAKE_CURRENT_LIST_DIR}/zig-cc.bat)
+    set(CMAKE_AR ${CMAKE_CURRENT_LIST_DIR}/zig-ar.bat)
+else ()
+    set(CMAKE_C_COMPILER ${CMAKE_CURRENT_LIST_DIR}/zig-cc)
+    set(CMAKE_AR ${CMAKE_CURRENT_LIST_DIR}/zig-ar)
+endif ()
+
+
+set(CMAKE_C_COMPILER_WORKS TRUE)
+set(CMAKE_CXX_COMPILER_WORKS TRUE)
+
+string(APPEND CMAKE_C_FLAGS " -target ${TARGET_TRIPLE}")
+string(APPEND CMAKE_C_FLAGS " -s")
+
+message(STATUS "Compiling for ${TARGET_TRIPLE} with ${CMAKE_C_COMPILER} and ${CMAKE_AR}")
