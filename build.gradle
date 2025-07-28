@@ -58,3 +58,29 @@ publishing {
         }
     }
 }
+
+tasks.register('buildNativesWindows', Exec) {
+    group = 'other'
+    workingDir = layout.projectDirectory.dir('native/build')
+
+    doFirst {
+        def buildDir = file('native/build')
+        if (buildDir.exists()) {
+            logger.lifecycle("Cleaning build directory: $buildDir")
+            project.delete(fileTree(dir: buildDir))
+        } else {
+            logger.lifecycle("Creating build directory: $buildDir")
+            buildDir.mkdirs()
+        }
+    }
+    commandLine 'cmd', '/c', 'cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/zig-x86_64-windows-gnu.cmake" .. -DCMAKE_BUILD_TYPE=Release -G Ninja && cmake --build . --config Release'
+}
+
+tasks.register('generateNativesWindows', Copy) {
+    group = 'build'
+
+    dependsOn 'buildNativesWindows'
+
+    from 'native/build/libopus4j.dll'
+    into 'src/main/resources/natives/windows-x64'
+}
