@@ -88,6 +88,18 @@ jobs:
           name: opus4j-windows-x86_64
           path: ./native/windows-x86_64/libopus4j.dll
 
+      - name: Build windows-aarch64 natives
+        run: |
+          mkdir -p windows-aarch64
+          cd windows-aarch64
+          cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/zig-aarch64-windows-gnu.cmake" .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --config Release
+      - name: Upload windows-aarch64 natives
+        uses: actions/upload-artifact@v4
+        with:
+          name: opus4j-windows-aarch64
+          path: ./native/windows-aarch64/libopus4j.dll
+
   build-java-library:
     runs-on: ubuntu-latest
     needs: [ build-natives ]
@@ -127,6 +139,11 @@ jobs:
         with:
           name: opus4j-windows-x86_64
           path: ./src/main/resources/natives/windows-x64/
+      - name: Download windows-aarch64
+        uses: actions/download-artifact@v4
+        with:
+          name: opus4j-windows-aarch64
+          path: ./src/main/resources/natives/windows-aarch64/
       - name: Build and deploy
         run: |
           chmod +x ./gradlew
