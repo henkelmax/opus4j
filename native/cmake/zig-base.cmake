@@ -14,5 +14,6 @@ set(CMAKE_CXX_COMPILER_WORKS TRUE)
 
 string(APPEND CMAKE_C_FLAGS " -target ${TARGET_TRIPLE}")
 string(APPEND CMAKE_C_FLAGS " -s")
+string(APPEND CMAKE_C_FLAGS " -Oz")
 
-message(STATUS "Compiling for ${TARGET_TRIPLE} with ${CMAKE_C_COMPILER} and ${CMAKE_AR}")
+message(STATUS "Compiling for ${TARGET_TRIPLE} with ${CMAKE_C_COMPILER} and ${CMAKE_AR} using ${CMAKE_C_FLAGS}")
