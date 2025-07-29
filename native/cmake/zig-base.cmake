@@ -12,8 +12,12 @@ endif ()
 set(CMAKE_C_COMPILER_WORKS TRUE)
 set(CMAKE_CXX_COMPILER_WORKS TRUE)
 
-string(APPEND CMAKE_C_FLAGS " -target ${TARGET_TRIPLE}")
-string(APPEND CMAKE_C_FLAGS " -s")
-string(APPEND CMAKE_C_FLAGS " -Oz")
+if (NOT DEFINED CMAKE_C_FLAGS_SET)
+    set(CMAKE_C_FLAGS_SET TRUE)
+
+    string(APPEND CMAKE_C_FLAGS " -target ${TARGET_TRIPLE}")
+    string(APPEND CMAKE_C_FLAGS " -s")
+    string(APPEND CMAKE_C_FLAGS " -Oz")
+endif ()
 
 message(STATUS "Compiling for ${TARGET_TRIPLE} with ${CMAKE_C_COMPILER} and ${CMAKE_AR} using ${CMAKE_C_FLAGS}")
