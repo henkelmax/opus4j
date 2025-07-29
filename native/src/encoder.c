@@ -6,7 +6,8 @@
 #include "opus.h"
 #include "exceptions.h"
 
-#define DEFAULT_PAYLOAD_SIZE 1024
+#define DEFAULT_MAX_PAYLOAD_SIZE 1024
+#define MAX_MAX_PAYLOAD_SIZE 4096
 
 typedef struct Encoder {
     OpusEncoder *encoder;
@@ -32,7 +33,7 @@ Encoder *create_encoder(const opus_int32 sample_rate, const int channels, const 
         return NULL;
     }
     encoder->channels = channels;
-    encoder->max_payload_size = DEFAULT_PAYLOAD_SIZE;
+    encoder->max_payload_size = DEFAULT_MAX_PAYLOAD_SIZE;
     return encoder;
 }
 
@@ -121,6 +122,12 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize0(
 ) {
     if (max_payload_size <= 0) {
         char *message = string_format("Invalid maximum payload size: %d", max_payload_size);
+        throw_illegal_argument_exception(env, message);
+        free(message);
+        return;
+    }
+    if (max_payload_size > MAX_MAX_PAYLOAD_SIZE) {
+        char *message = string_format("Maximum payload size too large: %d", max_payload_size);
         throw_illegal_argument_exception(env, message);
         free(message);
         return;

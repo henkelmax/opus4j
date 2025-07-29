@@ -61,7 +61,7 @@ public class OpusEncoderTest {
             encoder.setMaxPayloadSize(1);
             byte[] encoded = encoder.encode(new short[960]);
             assertEquals(1, encoded.length);
-            encoder.setMaxPayloadSize(Integer.MAX_VALUE);
+            encoder.setMaxPayloadSize(4096);
             byte[] encoded2 = encoder.encode(new short[960]);
             assertTrue(encoded2.length > 0);
         }
@@ -156,6 +156,14 @@ public class OpusEncoderTest {
                 encoder.setMaxPayloadSize(Integer.MIN_VALUE);
             });
             assertEquals("Invalid maximum payload size: " + Integer.MIN_VALUE, e3.getMessage());
+            IllegalArgumentException e4 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPayloadSize(4097);
+            });
+            assertEquals("Maximum payload size too large: 4097", e4.getMessage());
+            IllegalArgumentException e5 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPayloadSize(Integer.MAX_VALUE);
+            });
+            assertEquals("Maximum payload size too large: " + Integer.MAX_VALUE, e5.getMessage());
         }
     }
 
@@ -167,8 +175,8 @@ public class OpusEncoderTest {
             assertEquals(1, encoder.getMaxPayloadSize());
             encoder.setMaxPayloadSize(128);
             assertEquals(128, encoder.getMaxPayloadSize());
-            encoder.setMaxPayloadSize(Integer.MAX_VALUE);
-            assertEquals(Integer.MAX_VALUE, encoder.getMaxPayloadSize());
+            encoder.setMaxPayloadSize(4096);
+            assertEquals(4096, encoder.getMaxPayloadSize());
         }
     }
 
