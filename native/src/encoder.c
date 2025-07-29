@@ -42,22 +42,15 @@ void destroy_encoder(Encoder *encoder) {
     free(encoder);
 }
 
-jlong get_encoder_pointer(JNIEnv *env, jobject obj) {
-    return (*env)->GetLongField(env, obj, (*env)->GetFieldID(env, (*env)->GetObjectClass(env, obj), "encoder", "J"));
-}
-
 /**
  * Gets the encoder from the encoder java object.
  *
  * @param env the JNI environment
- * @param obj the encoder java object
+ * @param encoder_pointer the pointer to the encoder
  * @return the encoder or NULL - If the encoder could not be retrieved, this will throw a runtime exception in Java
  */
-Encoder *get_encoder(
-    JNIEnv *env,
-    jobject obj
-) {
-    const jlong pointer = get_encoder_pointer(env, obj);
+Encoder *get_encoder(JNIEnv *env, jlong encoder_pointer) {
+    const jlong pointer = encoder_pointer;
     if (pointer == 0) {
         throw_runtime_exception(env, "Encoder is closed");
         return NULL;
@@ -118,6 +111,7 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize0(
     JNIEnv *env,
     jobject obj,
+    jlong encoder_pointer,
     jint max_payload_size
 ) {
     if (max_payload_size <= 0) {
@@ -132,7 +126,7 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize0(
         free(message);
         return;
     }
-    Encoder *encoder = get_encoder(env, obj);
+    Encoder *encoder = get_encoder(env, encoder_pointer);
     if (encoder == NULL) {
         return;
     }
@@ -141,9 +135,10 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize0(
 
 JNIEXPORT jint JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize0(
     JNIEnv *env,
-    jobject obj
+    jobject obj,
+    jlong encoder_pointer
 ) {
-    const Encoder *encoder = get_encoder(env, obj);
+    const Encoder *encoder = get_encoder(env, encoder_pointer);
     if (encoder == NULL) {
         return 0;
     }
@@ -153,9 +148,10 @@ JNIEXPORT jint JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize0(
 JNIEXPORT jbyteArray JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_encode0(
     JNIEnv *env,
     jobject obj,
+    jlong encoder_pointer,
     jshortArray input
 ) {
-    const Encoder *encoder = get_encoder(env, obj);
+    const Encoder *encoder = get_encoder(env, encoder_pointer);
     if (encoder == NULL) {
         return NULL;
     }
@@ -181,9 +177,10 @@ JNIEXPORT jbyteArray JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_encode0(
 
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_resetState0(
     JNIEnv *env,
-    jobject obj
+    jobject obj,
+    jlong encoder_pointer
 ) {
-    const Encoder *encoder = get_encoder(env, obj);
+    const Encoder *encoder = get_encoder(env, encoder_pointer);
     if (encoder == NULL) {
         return;
     }
@@ -195,13 +192,12 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_resetState0(
 
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_destroyEncoder0(
     JNIEnv *env,
-    jobject obj
+    jobject obj,
+    jlong encoder_pointer
 ) {
-    const jlong pointer = get_encoder_pointer(env, obj);
-    if (pointer == 0) {
+    if (encoder_pointer == 0) {
         return;
     }
-    (*env)->SetLongField(env, obj, (*env)->GetFieldID(env, (*env)->GetObjectClass(env, obj), "encoder", "J"), 0);
-    Encoder *encoder = (Encoder *) (uintptr_t) pointer;
+    Encoder *encoder = (Encoder *) (uintptr_t) encoder_pointer;
     destroy_encoder(encoder);
 }

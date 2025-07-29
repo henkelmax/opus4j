@@ -38,27 +38,19 @@ void destroy_decoder(Decoder *decoder) {
     free(decoder);
 }
 
-jlong get_decoder_pointer(JNIEnv *env, jobject obj) {
-    return (*env)->GetLongField(env, obj, (*env)->GetFieldID(env, (*env)->GetObjectClass(env, obj), "decoder", "J"));
-}
-
 /**
  * Gets the decoder from the decoder java object.
  *
  * @param env the JNI environment
- * @param obj the decoder java object
+ * @param decoder_pointer the pointer to the decoder
  * @return the decoder or NULL - If the decoder could not be retrieved, this will throw a runtime exception in Java
  */
-Decoder *get_decoder(
-    JNIEnv *env,
-    jobject obj
-) {
-    const jlong pointer = get_decoder_pointer(env, obj);
-    if (pointer == 0) {
+Decoder *get_decoder(JNIEnv *env, jlong decoder_pointer) {
+    if (decoder_pointer == 0) {
         throw_runtime_exception(env, "Decoder is closed");
         return NULL;
     }
-    return (Decoder *) (uintptr_t) pointer;
+    return (Decoder *) (uintptr_t) decoder_pointer;
 }
 
 JNIEXPORT jstring JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_getOpusVersion0(
@@ -97,6 +89,7 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder0(
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_setFrameSize0(
     JNIEnv *env,
     jobject obj,
+    jlong decoder_pointer,
     jint frame_size
 ) {
     if (frame_size <= 0) {
@@ -105,7 +98,7 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_setFrameSize0(
         free(message);
         return;
     }
-    Decoder *decoder = get_decoder(env, obj);
+    Decoder *decoder = get_decoder(env, decoder_pointer);
     if (decoder == NULL) {
         return;
     }
@@ -114,9 +107,10 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_setFrameSize0(
 
 JNIEXPORT jint JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_getFrameSize0(
     JNIEnv *env,
-    jobject obj
+    jobject obj,
+    jlong decoder_pointer
 ) {
-    const Decoder *decoder = get_decoder(env, obj);
+    const Decoder *decoder = get_decoder(env, decoder_pointer);
     if (decoder == NULL) {
         return 0;
     }
@@ -126,10 +120,11 @@ JNIEXPORT jint JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_getFrameSize0(
 JNIEXPORT jshortArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decode0(
     JNIEnv *env,
     jobject obj,
+    jlong decoder_pointer,
     jbyteArray input,
     jboolean fec
 ) {
-    const Decoder *decoder = get_decoder(env, obj);
+    const Decoder *decoder = get_decoder(env, decoder_pointer);
     if (decoder == NULL) {
         return NULL;
     }
@@ -180,9 +175,10 @@ JNIEXPORT jshortArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decode0(
 
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_resetState0(
     JNIEnv *env,
-    jobject obj
+    jobject obj,
+    jlong decoder_pointer
 ) {
-    const Decoder *decoder = get_decoder(env, obj);
+    const Decoder *decoder = get_decoder(env, decoder_pointer);
     if (decoder == NULL) {
         return;
     }
@@ -194,13 +190,12 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_resetState0(
 
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_destroyDecoder0(
     JNIEnv *env,
-    jobject obj
+    jobject obj,
+    jlong decoder_pointer
 ) {
-    const jlong pointer = get_decoder_pointer(env, obj);
-    if (pointer == 0) {
+    if (decoder_pointer == 0) {
         return;
     }
-    (*env)->SetLongField(env, obj, (*env)->GetFieldID(env, (*env)->GetObjectClass(env, obj), "decoder", "J"), 0);
-    Decoder *decoder = (Decoder *) (uintptr_t) pointer;
+    Decoder *decoder = (Decoder *) (uintptr_t) decoder_pointer;
     destroy_decoder(decoder);
 }

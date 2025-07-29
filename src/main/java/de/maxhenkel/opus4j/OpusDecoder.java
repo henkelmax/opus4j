@@ -30,27 +30,27 @@ public class OpusDecoder implements AutoCloseable {
 
     private static native long createDecoder0(int sampleRate, int channels) throws IOException;
 
-    private native void setFrameSize0(int frameSize);
+    private native void setFrameSize0(long decoderPointer, int frameSize);
 
     public void setFrameSize(int frameSize) {
         synchronized (this) {
-            setFrameSize0(frameSize);
+            setFrameSize0(decoder, frameSize);
         }
     }
 
-    private native int getFrameSize0();
+    private native int getFrameSize0(long decoderPointer);
 
     public int getFrameSize() {
         synchronized (this) {
-            return getFrameSize0();
+            return getFrameSize0(decoder);
         }
     }
 
-    private native short[] decode0(@Nullable byte[] input, boolean fec);
+    private native short[] decode0(long decoderPointer, @Nullable byte[] input, boolean fec);
 
     public short[] decode(@Nullable byte[] input, boolean fec) {
         synchronized (this) {
-            return decode0(input, fec);
+            return decode0(decoder, input, fec);
         }
     }
 
@@ -62,20 +62,20 @@ public class OpusDecoder implements AutoCloseable {
         return decode(null, true);
     }
 
-    private native void resetState0();
+    private native void resetState0(long decoderPointer);
 
     public void resetState() {
         synchronized (this) {
-            resetState0();
+            resetState0(decoder);
         }
     }
 
-    private native void destroyDecoder0();
+    private native void destroyDecoder0(long decoderPointer);
 
     @Override
     public void close() {
         synchronized (this) {
-            destroyDecoder0();
+            destroyDecoder0(decoder);
             decoder = 0L;
         }
     }

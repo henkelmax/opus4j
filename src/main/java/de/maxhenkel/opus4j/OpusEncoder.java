@@ -30,44 +30,44 @@ public class OpusEncoder implements AutoCloseable {
 
     private static native long createEncoder0(int sampleRate, int channels, Application application) throws IOException;
 
-    private native void setMaxPayloadSize0(int maxPayloadSize);
+    private native void setMaxPayloadSize0(long encoderPointer, int maxPayloadSize);
 
     public void setMaxPayloadSize(int maxPayloadSize) {
         synchronized (this) {
-            setMaxPayloadSize0(maxPayloadSize);
+            setMaxPayloadSize0(encoder, maxPayloadSize);
         }
     }
 
-    private native int getMaxPayloadSize0();
+    private native int getMaxPayloadSize0(long encoderPointer);
 
     public int getMaxPayloadSize() {
         synchronized (this) {
-            return getMaxPayloadSize0();
+            return getMaxPayloadSize0(encoder);
         }
     }
 
-    private native byte[] encode0(short[] input);
+    private native byte[] encode0(long encoderPointer, short[] input);
 
     public byte[] encode(short[] input) {
         synchronized (this) {
-            return encode0(input);
+            return encode0(encoder, input);
         }
     }
 
-    private native void resetState0();
+    private native void resetState0(long encoderPointer);
 
     public void resetState() {
         synchronized (this) {
-            resetState0();
+            resetState0(encoder);
         }
     }
 
-    private native void destroyEncoder0();
+    private native void destroyEncoder0(long encoderPointer);
 
     @Override
     public void close() {
         synchronized (this) {
-            destroyEncoder0();
+            destroyEncoder0(encoder);
             encoder = 0L;
         }
     }
