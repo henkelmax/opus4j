@@ -105,15 +105,22 @@ platforms.each { target ->
     def buildTask = "buildNatives${safeName}"
     def copyTask = "copyNatives${safeName}"
 
-    def cmakeFile = "../../cmake/${target.file}"
+    def cmakeListsPath = "../../CMakeLists.txt"
+    def cmakePlatformPath = "../../cmake/${target.file}"
     def buildDir = layout.projectDirectory.dir("native/build/${target.res}")
     def resourceDir = layout.projectDirectory.dir("src/main/resources/natives/${target.res}")
+    def cSourcesDir = layout.projectDirectory.dir('native/src')
     def outputName = "libopus4j.${target.libExt}"
 
     tasks.register(configureTask, Exec) {
         group = 'natives'
         description = "CMake configure for ${target.name}"
         workingDir = buildDir
+
+        inputs.file(buildDir.file(cmakeListsPath))
+        inputs.file(buildDir.file(cmakePlatformPath))
+        inputs.dir(cSourcesDir)
+        outputs.dir(buildDir)
 
         doFirst {
             def dir = buildDir.asFile
@@ -125,7 +132,7 @@ platforms.each { target ->
         }
 
         commandLine 'cmake',
-                "-DCMAKE_TOOLCHAIN_FILE=${cmakeFile}",
+                "-DCMAKE_TOOLCHAIN_FILE=${cmakePlatformPath}",
                 '-DCMAKE_BUILD_TYPE=Release',
                 '-G', 'Ninja',
                 '../..'
@@ -145,7 +152,11 @@ platforms.each { target ->
         description = "Copy ${target.name} natives into resources"
         dependsOn buildTask
 
-        from buildDir.asFile.toPath().resolve(outputName).toFile()
+        def libraryFile = buildDir.asFile.toPath().resolve(outputName).toFile()
+        inputs.file(libraryFile)
+        outputs.dir(resourceDir)
+
+        from libraryFile
         into resourceDir
     }
 }
