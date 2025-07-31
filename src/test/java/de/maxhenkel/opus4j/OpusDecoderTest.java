@@ -39,6 +39,35 @@ public class OpusDecoderTest {
     }
 
     @Test
+    @DisplayName("Decode stereo")
+    void decodeStereo() throws IOException, UnknownPlatformException {
+        try (OpusEncoder encoder = new OpusEncoder(48000, 2, OpusEncoder.Application.VOIP)) {
+            byte[] encoded1 = encoder.encode(new short[120 * 2]);
+            byte[] encoded2 = encoder.encode(new short[240 * 2]);
+            byte[] encoded3 = encoder.encode(new short[480 * 2]);
+            byte[] encoded4 = encoder.encode(new short[960 * 2]);
+            byte[] encoded5 = encoder.encode(new short[1920 * 2]);
+            byte[] encoded6 = encoder.encode(new short[2880 * 2]);
+
+            try (OpusDecoder decoder = new OpusDecoder(48000, 2)) {
+                decoder.setFrameSize(2880);
+                short[] decoded1 = decoder.decode(encoded1);
+                assertEquals(120 * 2, decoded1.length);
+                short[] decoded2 = decoder.decode(encoded2);
+                assertEquals(240 * 2, decoded2.length);
+                short[] decoded3 = decoder.decode(encoded3);
+                assertEquals(480 * 2, decoded3.length);
+                short[] decoded4 = decoder.decode(encoded4);
+                assertEquals(960 * 2, decoded4.length);
+                short[] decoded5 = decoder.decode(encoded5);
+                assertEquals(1920 * 2, decoded5.length);
+                short[] decoded6 = decoder.decode(encoded6);
+                assertEquals(2880 * 2, decoded6.length);
+            }
+        }
+    }
+
+    @Test
     @DisplayName("Decode invalid packet")
     void decodeInvalidFrameSize() throws IOException, UnknownPlatformException {
         try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
@@ -76,6 +105,19 @@ public class OpusDecoderTest {
 
                 decoder.setFrameSize(100_000);
                 decoder.decode(encoded1);
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("Stereo frame size")
+    void stereoFrameSize() throws IOException, UnknownPlatformException {
+        try (OpusEncoder encoder = new OpusEncoder(48000, 2, OpusEncoder.Application.VOIP)) {
+            byte[] encoded = encoder.encode(new short[2880 * 2]);
+            try (OpusDecoder decoder = new OpusDecoder(48000, 2)) {
+                decoder.setFrameSize(2880);
+                short[] decode = decoder.decode(encoded);
+                assertEquals(2880 * 2, decode.length);
             }
         }
     }
