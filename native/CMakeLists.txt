@@ -18,14 +18,12 @@ endif ()
 file(DOWNLOAD
         "https://raw.githubusercontent.com/openjdk/jdk8u/refs/tags/${JDK_8_VERSION}/jdk/src/share/javavm/export/jni.h"
         ${CMAKE_BINARY_DIR}/jni_headers/jni.h
-        SHOW_PROGRESS
 )
 
 if (DEFINED JNI_MD_URL)
     file(DOWNLOAD
             ${JNI_MD_URL}
             ${CMAKE_BINARY_DIR}/jni_headers/jni_md.h
-            SHOW_PROGRESS
     )
 endif ()
 
