@@ -167,8 +167,9 @@ JNIEXPORT jshortArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decode0(
         return NULL;
     }
 
-    const jshortArray java_output = (*env)->NewShortArray(env, result);
-    (*env)->SetShortArrayRegion(env, java_output, 0, result, opus_output);
+    const int total_samples = result * decoder->channels;
+    const jshortArray java_output = (*env)->NewShortArray(env, total_samples);
+    (*env)->SetShortArrayRegion(env, java_output, 0, total_samples, opus_output);
     free(opus_output);
     return java_output;
 }
