@@ -8,6 +8,8 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+  MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
 
 jobs:
   build:
@@ -32,9 +34,6 @@ jobs:
           ./gradlew publish
           mkdir -p release
           cp $(find ./build/libs -maxdepth 1 -type f -name "*.jar") ./release/
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
       - uses: actions/upload-artifact@v4
         with:
           name: opus4j-java
