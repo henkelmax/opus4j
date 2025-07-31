@@ -12,7 +12,7 @@
 typedef struct Encoder {
     OpusEncoder *encoder;
     uint32_t channels;
-    int max_payload_size;
+    jint max_payload_size;
 } Encoder;
 
 /**
@@ -155,14 +155,15 @@ JNIEXPORT jbyteArray JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_encode0(
     if (encoder == NULL) {
         return NULL;
     }
-    const int input_length = (*env)->GetArrayLength(env, input);
-    const int max_payload_size = encoder->max_payload_size;
+    const jint input_length = (*env)->GetArrayLength(env, input);
+    const jint max_payload_size = encoder->max_payload_size;
 
     const opus_int16 *opus_input = (*env)->GetShortArrayElements(env, input, false);
 
     unsigned char *output = malloc(max_payload_size);
 
-    const int result = opus_encode(encoder->encoder, opus_input, input_length, output, max_payload_size);
+    const int result = opus_encode(encoder->encoder, opus_input, input_length / (jint) encoder->channels, output,
+                                   max_payload_size);
     (*env)->ReleaseShortArrayElements(env, input, (jshort *) opus_input, JNI_ABORT);
     if (result < 0) {
         free(output);
