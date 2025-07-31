@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'net.linguica.maven-settings' version "${maven_settings_version}"
 }
 
 group = 'de.maxhenkel.opus4j'
@@ -12,6 +13,10 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
     withSourcesJar()
     withJavadocJar()
+}
+
+tasks.named('sourcesJar', Jar) {
+    exclude 'natives/**'
 }
 
 repositories {
@@ -51,36 +56,106 @@ publishing {
         maven {
             name = 'henkelmax.public'
             url = uri('https://maven.maxhenkel.de/repository/public')
-            credentials {
-                username System.getenv('MAVEN_USERNAME')
-                password System.getenv('MAVEN_PASSWORD')
+        }
+    }
+}
+
+def platforms = [
+        [
+                name  : 'windows-x64',
+                file  : 'zig-x86_64-windows-gnu.cmake',
+                res   : 'windows-x64',
+                libExt: 'dll'
+        ],
+        [
+                name  : 'windows-arm64',
+                file  : 'zig-aarch64-windows-gnu.cmake',
+                res   : 'windows-aarch64',
+                libExt: 'dll'
+        ],
+        [
+                name  : 'linux-x64',
+                file  : 'zig-x86_64-linux-gnu.cmake',
+                res   : 'linux-x64',
+                libExt: 'so'
+        ],
+        [
+                name  : 'linux-arm64',
+                file  : 'zig-aarch64-linux-gnu.cmake',
+                res   : 'linux-aarch64',
+                libExt: 'so'
+        ],
+        [
+                name  : 'macos-x64',
+                file  : 'zig-x86_64-macos.cmake',
+                res   : 'macos-x64',
+                libExt: 'dylib'
+        ],
+        [
+                name  : 'macos-arm64',
+                file  : 'zig-aarch64-macos.cmake',
+                res   : 'macos-aarch64',
+                libExt: 'dylib'
+        ],
+]
+
+platforms.each { target ->
+    def safeName = target.name.capitalize().replace('-', '')
+    def configureTask = "configureNatives${safeName}"
+    def buildTask = "buildNatives${safeName}"
+    def copyTask = "copyNatives${safeName}"
+
+    def cmakeFile = "../../cmake/${target.file}"
+    def buildDir = layout.projectDirectory.dir("native/build/${target.res}")
+    def resourceDir = layout.projectDirectory.dir("src/main/resources/natives/${target.res}")
+    def outputName = "libopus4j.${target.libExt}"
+
+    tasks.register(configureTask, Exec) {
+        group = 'natives'
+        description = "CMake configure for ${target.name}"
+        workingDir = buildDir
+
+        doFirst {
+            def dir = buildDir.asFile
+            if (dir.exists()) {
+                logger.lifecycle("Cleaning ${dir}")
+                project.delete(fileTree(dir: dir))
             }
+            dir.mkdirs()
         }
+
+        commandLine 'cmake',
+                "-DCMAKE_TOOLCHAIN_FILE=${cmakeFile}",
+                '-DCMAKE_BUILD_TYPE=Release',
+                '-G', 'Ninja',
+                '../..'
+    }
+
+    tasks.register(buildTask, Exec) {
+        group = 'natives'
+        description = "Build natives for ${target.name}"
+        workingDir = buildDir
+        dependsOn configureTask
+
+        commandLine 'cmake', '--build', '.', '--config', 'Release'
+    }
+
+    tasks.register(copyTask, Copy) {
+        group = 'natives'
+        description = "Copy ${target.name} natives into resources"
+        dependsOn buildTask
+
+        from buildDir.asFile.toPath().resolve(outputName).toFile()
+        into resourceDir
     }
 }
 
-tasks.register('buildNativesWindows', Exec) {
-    group = 'other'
-    workingDir = layout.projectDirectory.dir('native/build')
-
-    doFirst {
-        def buildDir = file('native/build')
-        if (buildDir.exists()) {
-            logger.lifecycle("Cleaning build directory: $buildDir")
-            project.delete(fileTree(dir: buildDir))
-        } else {
-            logger.lifecycle("Creating build directory: $buildDir")
-            buildDir.mkdirs()
-        }
-    }
-    commandLine 'cmd', '/c', 'cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/zig-x86_64-windows-gnu.cmake" .. -DCMAKE_BUILD_TYPE=Release -G Ninja && cmake --build . --config Release'
+tasks.register('buildAndCopyAllNatives') {
+    group = 'natives'
+    description = 'Build & copy all native libraries for every platform/arch'
+    dependsOn platforms.collect { "copyNatives${it.name.capitalize().replace('-', '')}" }
 }
 
-tasks.register('generateNativesWindows', Copy) {
-    group = 'build'
-
-    dependsOn 'buildNativesWindows'
-
-    from 'native/build/libopus4j.dll'
-    into 'src/main/resources/natives/windows-x64'
+tasks.named('processResources') {
+    dependsOn 'buildAndCopyAllNatives'
 }
