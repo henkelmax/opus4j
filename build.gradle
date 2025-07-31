@@ -144,6 +144,9 @@ platforms.each { target ->
         workingDir = buildDir
         dependsOn configureTask
 
+        inputs.dir(buildDir)
+        outputs.dir(buildDir)
+
         commandLine 'cmake', '--build', '.', '--config', 'Release'
     }
 
@@ -152,9 +155,9 @@ platforms.each { target ->
         description = "Copy ${target.name} natives into resources"
         dependsOn buildTask
 
-        def libraryFile = buildDir.asFile.toPath().resolve(outputName).toFile()
+        def libraryFile = buildDir.file(outputName)
         inputs.file(libraryFile)
-        outputs.dir(resourceDir)
+        outputs.file(resourceDir.file(outputName))
 
         from libraryFile
         into resourceDir
