@@ -24,7 +24,7 @@ Decoder *create_decoder(const opus_int32 sample_rate, const int channels, int *e
     int err = 0;
     decoder->decoder = opus_decoder_create(sample_rate, channels, &err);
     *error = err;
-    if (err != OPUS_OK) {
+    if (err < 0) {
         free(decoder);
         return NULL;
     }
@@ -45,7 +45,7 @@ void destroy_decoder(Decoder *decoder) {
  * @param decoder_pointer the pointer to the decoder
  * @return the decoder or NULL - If the decoder could not be retrieved, this will throw a runtime exception in Java
  */
-Decoder *get_decoder(JNIEnv *env, jlong decoder_pointer) {
+Decoder *get_decoder(JNIEnv *env, const jlong decoder_pointer) {
     if (decoder_pointer == 0) {
         throw_runtime_exception(env, "Decoder is closed");
         return NULL;
@@ -75,7 +75,7 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder0(
 
     int err = 0;
     Decoder *decoder = create_decoder(sample_rate, channels, &err);
-    if (err != OPUS_OK) {
+    if (err < 0) {
         throw_opus_io_exception(env, err, "Failed to create decoder");
         if (decoder != NULL) {
             destroy_decoder(decoder);
@@ -89,8 +89,8 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder0(
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_setFrameSize0(
     JNIEnv *env,
     jobject obj,
-    jlong decoder_pointer,
-    jint frame_size
+    const jlong decoder_pointer,
+    const jint frame_size
 ) {
     if (frame_size <= 0) {
         char *message = string_format("Invalid frame size: %d", frame_size);
@@ -108,7 +108,7 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_setFrameSize0(
 JNIEXPORT jint JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_getFrameSize0(
     JNIEnv *env,
     jobject obj,
-    jlong decoder_pointer
+    const jlong decoder_pointer
 ) {
     const Decoder *decoder = get_decoder(env, decoder_pointer);
     if (decoder == NULL) {
@@ -120,9 +120,9 @@ JNIEXPORT jint JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_getFrameSize0(
 JNIEXPORT jshortArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decode0(
     JNIEnv *env,
     jobject obj,
-    jlong decoder_pointer,
-    jbyteArray input,
-    jboolean fec
+    const jlong decoder_pointer,
+    const jbyteArray input,
+    const jboolean fec
 ) {
     const Decoder *decoder = get_decoder(env, decoder_pointer);
     if (decoder == NULL) {
@@ -130,8 +130,8 @@ JNIEXPORT jshortArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decode0(
     }
 
     bool use_fec = fec;
-    int input_length;
-    jbyte *opus_input;
+    jsize input_length;
+    unsigned char *opus_input;
 
     if (input == NULL) {
         use_fec = true;
@@ -139,18 +139,18 @@ JNIEXPORT jshortArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decode0(
         opus_input = NULL;
     } else {
         input_length = (*env)->GetArrayLength(env, input);
-        opus_input = (*env)->GetByteArrayElements(env, input, false);
+        opus_input = (unsigned char *) (*env)->GetByteArrayElements(env, input, false);
     }
 
     const int output_length = decoder->frame_size * decoder->channels;
 
     opus_int16 *opus_output = calloc(output_length, sizeof(opus_int16));
 
-    const int result = opus_decode(decoder->decoder, (unsigned char *) opus_input, input_length, opus_output,
+    const int result = opus_decode(decoder->decoder, opus_input, input_length, opus_output,
                                    decoder->frame_size, use_fec);
 
     if (input != NULL) {
-        (*env)->ReleaseByteArrayElements(env, input, opus_input, JNI_ABORT);
+        (*env)->ReleaseByteArrayElements(env, input, (jbyte *) opus_input, JNI_ABORT);
     }
 
     if (result < 0) {
@@ -184,7 +184,7 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_resetState0(
         return;
     }
     const int err = opus_decoder_ctl(decoder->decoder, OPUS_RESET_STATE);
-    if (err != OPUS_OK) {
+    if (err < 0) {
         throw_opus_io_exception(env, err, "Failed to reset state");
     }
 }

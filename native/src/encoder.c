@@ -28,7 +28,7 @@ Encoder *create_encoder(const opus_int32 sample_rate, const int channels, const 
     int err = 0;
     encoder->encoder = opus_encoder_create(sample_rate, channels, application, &err);
     *error = err;
-    if (err != OPUS_OK) {
+    if (err < 0) {
         free(encoder);
         return NULL;
     }
@@ -97,7 +97,7 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(
 
     int err = 0;
     Encoder *encoder = create_encoder(sample_rate, channels, opus_application, &err);
-    if (err != OPUS_OK) {
+    if (err < 0) {
         throw_opus_io_exception(env, err, "Failed to create encoder");
         if (encoder != NULL) {
             destroy_encoder(encoder);
@@ -186,7 +186,7 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_resetState0(
         return;
     }
     const int err = opus_encoder_ctl(encoder->encoder, OPUS_RESET_STATE);
-    if (err != OPUS_OK) {
+    if (err < 0) {
         throw_opus_io_exception(env, err, "Failed to reset state");
     }
 }
