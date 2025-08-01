@@ -78,7 +78,7 @@ public class OpusDecoderTest {
                 IOException e1 = assertThrowsExactly(IOException.class, () -> {
                     decoder.decode(cutoff);
                 });
-                assertEquals("Failed to decode: OPUS_INVALID_PACKET", e1.getMessage());
+                assertEquals("Failed to decode: corrupted stream", e1.getMessage());
             }
         }
     }
@@ -95,13 +95,13 @@ public class OpusDecoderTest {
                 IOException e1 = assertThrowsExactly(IOException.class, () -> {
                     decoder.decode(encoded1);
                 });
-                assertEquals("Failed to decode: OPUS_BUFFER_TOO_SMALL", e1.getMessage());
+                assertEquals("Failed to decode: buffer too small", e1.getMessage());
 
                 decoder.setFrameSize(2879);
                 IOException e2 = assertThrowsExactly(IOException.class, () -> {
                     decoder.decode(encoded2);
                 });
-                assertEquals("Failed to decode: OPUS_BUFFER_TOO_SMALL", e2.getMessage());
+                assertEquals("Failed to decode: buffer too small", e2.getMessage());
 
                 decoder.setFrameSize(100_000);
                 decoder.decode(encoded1);
@@ -200,7 +200,7 @@ public class OpusDecoderTest {
             OpusDecoder decoder = new OpusDecoder(48001, 1);
             decoder.close();
         });
-        assertEquals("Failed to create decoder: OPUS_BAD_ARG", e.getMessage());
+        assertEquals("Failed to create decoder: invalid argument", e.getMessage());
     }
 
     @Test

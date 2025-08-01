@@ -35,22 +35,22 @@ public class OpusEncoderTest {
             IOException e1 = assertThrowsExactly(IOException.class, () -> {
                 encoder.encode(new short[0]);
             });
-            assertEquals("Failed to encode: OPUS_BAD_ARG", e1.getMessage());
+            assertEquals("Failed to encode: invalid argument", e1.getMessage());
 
             IOException e2 = assertThrowsExactly(IOException.class, () -> {
                 encoder.encode(new short[1]);
             });
-            assertEquals("Failed to encode: OPUS_BAD_ARG", e2.getMessage());
+            assertEquals("Failed to encode: invalid argument", e2.getMessage());
 
             IOException e3 = assertThrowsExactly(IOException.class, () -> {
                 encoder.encode(new short[239]);
             });
-            assertEquals("Failed to encode: OPUS_BAD_ARG", e3.getMessage());
+            assertEquals("Failed to encode: invalid argument", e3.getMessage());
 
             IOException e4 = assertThrowsExactly(IOException.class, () -> {
                 encoder.encode(new short[961]);
             });
-            assertEquals("Failed to encode: OPUS_BAD_ARG", e4.getMessage());
+            assertEquals("Failed to encode: invalid argument", e4.getMessage());
         }
     }
 
@@ -118,7 +118,7 @@ public class OpusEncoderTest {
             OpusEncoder encoder = new OpusEncoder(48001, 1, OpusEncoder.Application.VOIP);
             encoder.close();
         });
-        assertEquals("Failed to create encoder: OPUS_BAD_ARG", e.getMessage());
+        assertEquals("Failed to create encoder: invalid argument", e.getMessage());
     }
 
     @Test

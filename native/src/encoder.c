@@ -98,7 +98,7 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(
     int err = 0;
     Encoder *encoder = create_encoder(sample_rate, channels, opus_application, &err);
     if (err != OPUS_OK) {
-        throw_opus_io_exception(env, &err, "Failed to create encoder");
+        throw_opus_io_exception(env, err, "Failed to create encoder");
         if (encoder != NULL) {
             destroy_encoder(encoder);
         }
@@ -167,7 +167,7 @@ JNIEXPORT jbyteArray JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_encode0(
     (*env)->ReleaseShortArrayElements(env, input, (jshort *) opus_input, JNI_ABORT);
     if (result < 0) {
         free(output);
-        throw_opus_io_exception(env, &result, "Failed to encode");
+        throw_opus_io_exception(env, result, "Failed to encode");
         return NULL;
     }
     const jbyteArray java_output = (*env)->NewByteArray(env, result);
@@ -187,7 +187,7 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_resetState0(
     }
     const int err = opus_encoder_ctl(encoder->encoder, OPUS_RESET_STATE);
     if (err != OPUS_OK) {
-        throw_opus_io_exception(env, &err, "Failed to reset state");
+        throw_opus_io_exception(env, err, "Failed to reset state");
     }
 }
 

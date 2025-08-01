@@ -72,31 +72,8 @@ void throw_illegal_argument_exception(JNIEnv *env, const char *message) {
     throw_exception(env, "java/lang/IllegalArgumentException", message);
 }
 
-char *translate_error(const int *error) {
-    switch (*error) {
-        case OPUS_OK:
-            return "OPUS_OK";
-        case OPUS_BAD_ARG:
-            return "OPUS_BAD_ARG";
-        case OPUS_BUFFER_TOO_SMALL:
-            return "OPUS_BUFFER_TOO_SMALL";
-        case OPUS_INTERNAL_ERROR:
-            return "OPUS_INTERNAL_ERROR";
-        case OPUS_INVALID_PACKET:
-            return "OPUS_INVALID_PACKET";
-        case OPUS_UNIMPLEMENTED:
-            return "OPUS_UNIMPLEMENTED";
-        case OPUS_INVALID_STATE:
-            return "OPUS_INVALID_STATE";
-        case OPUS_ALLOC_FAIL:
-            return "OPUS_ALLOC_FAIL";
-        default:
-            return "UNKNOWN";
-    }
-}
-
-void throw_opus_io_exception(JNIEnv *env, const int *error, const char *message) {
-    char *formatted = string_format("%s: %s", message, translate_error(error));
+void throw_opus_io_exception(JNIEnv *env, const int error, const char *message) {
+    char *formatted = string_format("%s: %s", message, opus_strerror(error));
     throw_io_exception(env, formatted);
     free(formatted);
 }

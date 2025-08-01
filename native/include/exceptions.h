@@ -11,6 +11,6 @@ void throw_io_exception(JNIEnv *env, const char *message);
 
 void throw_illegal_argument_exception(JNIEnv *env, const char *message);
 
-void throw_opus_io_exception(JNIEnv *env, const int *error, const char *message);
+void throw_opus_io_exception(JNIEnv *env, const int error, const char *message);
 
 #endif

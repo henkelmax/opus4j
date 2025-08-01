@@ -76,7 +76,7 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder0(
     int err = 0;
     Decoder *decoder = create_decoder(sample_rate, channels, &err);
     if (err != OPUS_OK) {
-        throw_opus_io_exception(env, &err, "Failed to create decoder");
+        throw_opus_io_exception(env, err, "Failed to create decoder");
         if (decoder != NULL) {
             destroy_decoder(decoder);
         }
@@ -154,7 +154,7 @@ JNIEXPORT jshortArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decode0(
     }
 
     if (result < 0) {
-        throw_opus_io_exception(env, &result, "Failed to decode");
+        throw_opus_io_exception(env, result, "Failed to decode");
         free(opus_output);
         return NULL;
     }
@@ -185,7 +185,7 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_resetState0(
     }
     const int err = opus_decoder_ctl(decoder->decoder, OPUS_RESET_STATE);
     if (err != OPUS_OK) {
-        throw_opus_io_exception(env, &err, "Failed to reset state");
+        throw_opus_io_exception(env, err, "Failed to reset state");
     }
 }
 
