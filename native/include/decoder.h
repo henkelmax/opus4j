@@ -33,6 +33,14 @@ JNIEXPORT jshortArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decode0(
     jboolean fec
 );
 
+JNIEXPORT jobjectArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_recover0(
+    JNIEnv *env,
+    jobject obj,
+    jlong decoder_pointer,
+    jbyteArray input,
+    jint max_frames
+);
+
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_resetState0(
     JNIEnv *env,
     jobject obj

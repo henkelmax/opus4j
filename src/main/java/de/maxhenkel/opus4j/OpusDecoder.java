@@ -62,6 +62,14 @@ public class OpusDecoder implements AutoCloseable {
         return decode(null, true);
     }
 
+    private native short[][] recover0(long decoderPointer, byte[] input, int max_frames);
+
+    public short[][] recover(@Nullable byte[] input, int max_frames) {
+        synchronized (this) {
+            return recover0(decoder, input, max_frames);
+        }
+    }
+
     private native void resetState0(long decoderPointer);
 
     public void resetState() {

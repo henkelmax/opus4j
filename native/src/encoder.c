@@ -32,6 +32,13 @@ Encoder *create_encoder(const opus_int32 sample_rate, const int channels, const 
         free(encoder);
         return NULL;
     }
+    err = opus_encoder_ctl(encoder->encoder, OPUS_SET_DRED_DURATION(10));
+    *error = err;
+    if (err < 0) {
+        free(encoder->encoder);
+        free(encoder);
+        return NULL;
+    }
     encoder->channels = channels;
     encoder->max_payload_size = DEFAULT_MAX_PAYLOAD_SIZE;
     return encoder;

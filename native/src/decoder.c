@@ -7,8 +7,13 @@
 
 #define DEFAULT_FRAME_SIZE 960
 
+#define MIN(a, b) ( ( (a) < (b) ) ? (a) : (b) )
+
 typedef struct Decoder {
     OpusDecoder *decoder;
+    OpusDREDDecoder *dred_decoder;
+    OpusDRED *dred;
+    opus_int32 sample_rate;
     int frame_size;
     int channels;
 } Decoder;
@@ -28,6 +33,22 @@ Decoder *create_decoder(const opus_int32 sample_rate, const int channels, int *e
         free(decoder);
         return NULL;
     }
+    decoder->dred_decoder = opus_dred_decoder_create(&err);
+    *error = err;
+    if (err < 0) {
+        free(decoder->decoder);
+        free(decoder);
+        return NULL;
+    }
+    decoder->dred = opus_dred_alloc(&err);
+    *error = err;
+    if (err < 0) {
+        free(decoder->decoder);
+        free(decoder->dred_decoder);
+        free(decoder);
+        return NULL;
+    }
+    decoder->sample_rate = sample_rate;
     decoder->frame_size = DEFAULT_FRAME_SIZE;
     decoder->channels = channels;
     return decoder;
@@ -35,6 +56,8 @@ Decoder *create_decoder(const opus_int32 sample_rate, const int channels, int *e
 
 void destroy_decoder(Decoder *decoder) {
     opus_decoder_destroy(decoder->decoder);
+    opus_dred_decoder_destroy(decoder->dred_decoder);
+    opus_dred_free(decoder->dred);
     free(decoder);
 }
 
@@ -142,6 +165,18 @@ JNIEXPORT jshortArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decode0(
         opus_input = (unsigned char *) (*env)->GetByteArrayElements(env, input, false);
     }
 
+    int dred_end; // will be set to the number of samples covered by DRED
+    // 4) Parse the DRED info out of the packet
+    opus_dred_parse(
+        decoder->dred_decoder, // DRED‐decoder state
+        decoder->dred, // DRED feature container
+        opus_input, input_length, // incoming Opus packet
+        /* max_dred_samples */ decoder->frame_size * 10, // e.g. up to 200 ms @20 ms frames
+        decoder->sample_rate, // sampling rate
+        &dred_end, // how many past samples we now have features for
+        1 // defer_processing = 1 -> we need to call opus_dred_process()
+    );
+
     const int output_length = decoder->frame_size * decoder->channels;
 
     opus_int16 *opus_output = calloc(output_length, sizeof(opus_int16));
@@ -172,6 +207,128 @@ JNIEXPORT jshortArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decode0(
     (*env)->SetShortArrayRegion(env, java_output, 0, total_samples, opus_output);
     free(opus_output);
     return java_output;
+}
+
+jobjectArray create_short_short_array(JNIEnv *env, const int length, const int inner_length) {
+    const jclass shortArrayCls = (*env)->FindClass(env, "[S");
+    if (shortArrayCls == NULL) {
+        throw_illegal_state_exception(env, "Failed to find short array class");
+        return NULL;
+    }
+
+    const jobjectArray short_short_array = (*env)->NewObjectArray(env, length, shortArrayCls, NULL);
+    for (int i = 0; i < length; i++) {
+        (*env)->SetObjectArrayElement(env, short_short_array, i, (*env)->NewShortArray(env, inner_length));
+    }
+    return short_short_array;
+}
+
+void fill_short_short_array(JNIEnv *env, const jobjectArray short_short_array, const int index, const opus_int16 *data,
+                            const int length) {
+    const jshortArray short_array = (*env)->GetObjectArrayElement(env, short_short_array, index);
+    const jsize array_length = (*env)->GetArrayLength(env, short_array);
+    if (array_length != length) {
+        (*env)->DeleteLocalRef(env, short_array);
+        //TODO Check what we should do here
+        return;
+    }
+    (*env)->SetShortArrayRegion(env, short_array, 0, length, data);
+    (*env)->DeleteLocalRef(env, short_array);
+}
+
+JNIEXPORT jobjectArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_recover0(
+    JNIEnv *env,
+    jobject obj,
+    const jlong decoder_pointer,
+    const jbyteArray input,
+    const jint max_frames
+) {
+    if (max_frames <= 0) {
+        throw_illegal_argument_exception(env, "Max frames must be greater than 0");
+        return NULL;
+    }
+    const Decoder *decoder = get_decoder(env, decoder_pointer);
+    if (decoder == NULL) {
+        return NULL;
+    }
+    if (input == NULL) {
+        throw_illegal_argument_exception(env, "Can't recover without input");
+        return NULL;
+    }
+
+    const jsize input_length = (*env)->GetArrayLength(env, input);
+    unsigned char *opus_input = (unsigned char *) (*env)->GetByteArrayElements(env, input, false);
+
+    int dred_end;
+    opus_dred_parse(
+        decoder->dred_decoder,
+        decoder->dred,
+        opus_input,
+        input_length,
+        decoder->frame_size * 10,
+        decoder->sample_rate,
+        &dred_end,
+        0
+    );
+
+    printf("dred_end: %d\n", dred_end);
+
+    const int max_recoverable_frames = dred_end / decoder->frame_size;
+
+    const int output_length = decoder->frame_size * decoder->channels;
+
+    opus_int16 *opus_output = calloc(output_length, sizeof(opus_int16));
+
+    int result = opus_decode(decoder->decoder, opus_input, input_length, opus_output,
+                             decoder->frame_size, false);
+
+    (*env)->ReleaseByteArrayElements(env, input, (jbyte *) opus_input, JNI_ABORT);
+
+    if (result < 0) {
+        throw_opus_io_exception(env, result, "Failed to decode");
+        free(opus_output);
+        return NULL;
+    }
+
+    if (result > output_length) {
+        char *message = string_format("Invalid output length: %d>%d", result, output_length);
+        throw_illegal_state_exception(env, message);
+        free(message);
+        free(opus_output);
+        return NULL;
+    }
+
+    const int frames_to_recover = MIN(max_frames, max_recoverable_frames + 1);
+
+    const jobjectArray recovered = create_short_short_array(env, frames_to_recover, output_length);
+
+    fill_short_short_array(env, recovered, frames_to_recover - 1, opus_output, result * decoder->channels);
+
+    for (int i = 0; i < max_recoverable_frames; i++) {
+        result = opus_decoder_dred_decode(
+            decoder->decoder,
+            decoder->dred,
+            (i + 1) * decoder->frame_size,
+            opus_output,
+            decoder->frame_size
+        );
+        if (result < 0) {
+            throw_opus_io_exception(env, result, "Failed to recover");
+            free(opus_output);
+            return NULL;
+        }
+        if (result != output_length) {
+            char *message = string_format("Invalid output length: %d!=%d", result, output_length);
+            throw_illegal_state_exception(env, message);
+            free(message);
+            free(opus_output);
+            return NULL;
+        }
+        fill_short_short_array(env, recovered, i, opus_output, result * decoder->channels);
+    }
+
+    free(opus_output);
+    return recovered;
 }
 
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_resetState0(

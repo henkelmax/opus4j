@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.12)
 project(opus4j LANGUAGES C)
 
 set(JDK_8_VERSION "jdk8u462-ga")
-set(OPUS_VERSION "v1.5.2")
+set(OPUS_VERSION "1.5.2")
 
 if (WIN32)
     set(JNI_MD_URL "https://raw.githubusercontent.com/openjdk/jdk8u/refs/tags/${JDK_8_VERSION}/jdk/src/windows/javavm/export/jni_md.h")
@@ -27,11 +27,12 @@ if (DEFINED JNI_MD_URL)
     )
 endif ()
 
+set(OPUS_DRED ON CACHE BOOL "Enable deep‐redundancy (DRED) support in Opus" FORCE)
+
 include(FetchContent)
 FetchContent_Declare(
         opus
-        GIT_REPOSITORY https://github.com/xiph/opus.git
-        GIT_TAG ${OPUS_VERSION}
+        URL "https://github.com/xiph/opus/releases/download/v${OPUS_VERSION}/opus-${OPUS_VERSION}.tar.gz"
 )
 FetchContent_MakeAvailable(opus)
 
