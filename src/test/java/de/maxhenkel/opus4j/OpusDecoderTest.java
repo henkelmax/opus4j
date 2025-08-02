@@ -228,12 +228,22 @@ public class OpusDecoderTest {
     }
 
     @Test
+    @DisplayName("Is closed")
+    void isClosed() throws IOException, UnknownPlatformException {
+        try (OpusDecoder decoder = new OpusDecoder(48000, 1)) {
+            assertFalse(decoder.isClosed());
+            decoder.close();
+            assertTrue(decoder.isClosed());
+        }
+    }
+
+    @Test
     @DisplayName("Get Opus version")
     void getOpusVersion() throws IOException, UnknownPlatformException {
-        OpusDecoder decoder = new OpusDecoder(48000, 1);
-        assertEquals("libopus", decoder.getOpusVersion().split(" ")[0]);
-        assertTrue(decoder.getOpusVersion().matches("libopus \\d+\\.\\d+\\.\\d+"));
-        decoder.close();
+        try (OpusDecoder decoder = new OpusDecoder(48000, 1)) {
+            assertEquals("libopus", decoder.getOpusVersion().split(" ")[0]);
+            assertTrue(decoder.getOpusVersion().matches("libopus \\d+\\.\\d+\\.\\d+"));
+        }
     }
 
 }

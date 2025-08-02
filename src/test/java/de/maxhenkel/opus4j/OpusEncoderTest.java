@@ -134,10 +134,10 @@ public class OpusEncoderTest {
     @Test
     @DisplayName("Get Opus version")
     void getOpusVersion() throws IOException, UnknownPlatformException {
-        OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP);
-        assertEquals("libopus", encoder.getOpusVersion().split(" ")[0]);
-        assertTrue(encoder.getOpusVersion().matches("libopus \\d+\\.\\d+\\.\\d+"));
-        encoder.close();
+        try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
+            assertEquals("libopus", encoder.getOpusVersion().split(" ")[0]);
+            assertTrue(encoder.getOpusVersion().matches("libopus \\d+\\.\\d+\\.\\d+"));
+        }
     }
 
     @Test
@@ -177,6 +177,16 @@ public class OpusEncoderTest {
             assertEquals(128, encoder.getMaxPayloadSize());
             encoder.setMaxPayloadSize(4096);
             assertEquals(4096, encoder.getMaxPayloadSize());
+        }
+    }
+
+    @Test
+    @DisplayName("Is closed")
+    void isClosed() throws IOException, UnknownPlatformException {
+        try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
+            assertFalse(encoder.isClosed());
+            encoder.close();
+            assertTrue(encoder.isClosed());
         }
     }
 
