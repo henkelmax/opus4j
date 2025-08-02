@@ -68,6 +68,20 @@ public class OpusDecoderTest {
     }
 
     @Test
+    @DisplayName("Decode FEC")
+    void decodeFec() throws IOException, UnknownPlatformException {
+        try (OpusDecoder decoder = new OpusDecoder(48000, 1)) {
+            decoder.setFrameSize(960);
+            short[] decodedFec1 = decoder.decodeFec();
+            assertEquals(960, decodedFec1.length);
+            short[] decodedFec2 = decoder.decode(null);
+            assertEquals(960, decodedFec2.length);
+            short[] decodedFec3 = decoder.decode(new byte[0], true);
+            assertEquals(960, decodedFec3.length);
+        }
+    }
+
+    @Test
     @DisplayName("Decode invalid packet")
     void decodeInvalidFrameSize() throws IOException, UnknownPlatformException {
         try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
