@@ -63,8 +63,8 @@ JNIEXPORT jstring JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_getOpusVersion0(
 JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_createDecoder0(
     JNIEnv *env,
     jclass clazz,
-    jint sample_rate,
-    jint channels
+    const jint sample_rate,
+    const jint channels
 ) {
     if (channels != 1 && channels != 2) {
         char *message = string_format("Invalid number of channels: %d", channels);
@@ -296,7 +296,7 @@ JNIEXPORT jobjectArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decodeRecove
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_resetState0(
     JNIEnv *env,
     jobject obj,
-    jlong decoder_pointer
+    const jlong decoder_pointer
 ) {
     const Decoder *decoder = get_decoder(env, decoder_pointer);
     if (decoder == NULL) {
@@ -311,7 +311,7 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_resetState0(
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_destroyDecoder0(
     JNIEnv *env,
     jobject obj,
-    jlong decoder_pointer
+    const jlong decoder_pointer
 ) {
     if (decoder_pointer == 0) {
         return;

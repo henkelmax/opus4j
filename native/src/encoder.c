@@ -70,7 +70,7 @@ void destroy_encoder(Encoder *encoder) {
  * @param encoder_pointer the pointer to the encoder
  * @return the encoder or NULL - If the encoder could not be retrieved, this will throw a runtime exception in Java
  */
-Encoder *get_encoder(JNIEnv *env, jlong encoder_pointer) {
+Encoder *get_encoder(JNIEnv *env, const jlong encoder_pointer) {
     const jlong pointer = encoder_pointer;
     if (pointer == 0) {
         throw_runtime_exception(env, "Encoder is closed");
@@ -89,8 +89,8 @@ JNIEXPORT jstring JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_getOpusVersion0(
 JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(
     JNIEnv *env,
     jclass clazz,
-    jint sample_rate,
-    jint channels,
+    const jint sample_rate,
+    const jint channels,
     jobject application
 ) {
     if (channels != 1 && channels != 2) {
@@ -132,8 +132,8 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_createEncoder0(
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize0(
     JNIEnv *env,
     jobject obj,
-    jlong encoder_pointer,
-    jint max_payload_size
+    const jlong encoder_pointer,
+    const jint max_payload_size
 ) {
     if (max_payload_size <= 0) {
         char *message = string_format("Invalid maximum payload size: %d", max_payload_size);
@@ -157,7 +157,7 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPayloadSize0(
 JNIEXPORT jint JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize0(
     JNIEnv *env,
     jobject obj,
-    jlong encoder_pointer
+    const jlong encoder_pointer
 ) {
     const Encoder *encoder = get_encoder(env, encoder_pointer);
     if (encoder == NULL) {
@@ -169,8 +169,8 @@ JNIEXPORT jint JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize0(
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPacketLossPercentage0(
     JNIEnv *env,
     jobject obj,
-    jlong encoder_pointer,
-    jfloat packet_loss_perc
+    const jlong encoder_pointer,
+    const jfloat packet_loss_perc
 ) {
     if (isnan(packet_loss_perc) || isinf(packet_loss_perc) || packet_loss_perc < 0.0f || packet_loss_perc > 1.0f || (
             packet_loss_perc > 0.0f && packet_loss_perc < FLT_MIN)) {
@@ -190,7 +190,7 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPacketLossPerc
 JNIEXPORT jfloat JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPacketLossPercentage0(
     JNIEnv *env,
     jobject obj,
-    jlong encoder_pointer
+    const jlong encoder_pointer
 ) {
     const Encoder *encoder = get_encoder(env, encoder_pointer);
     if (encoder == NULL) {
@@ -202,8 +202,8 @@ JNIEXPORT jfloat JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPacketLossPe
 JNIEXPORT jbyteArray JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_encode0(
     JNIEnv *env,
     jobject obj,
-    jlong encoder_pointer,
-    jshortArray input
+    const jlong encoder_pointer,
+    const jshortArray input
 ) {
     const Encoder *encoder = get_encoder(env, encoder_pointer);
     if (encoder == NULL) {
@@ -233,7 +233,7 @@ JNIEXPORT jbyteArray JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_encode0(
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_resetState0(
     JNIEnv *env,
     jobject obj,
-    jlong encoder_pointer
+    const jlong encoder_pointer
 ) {
     const Encoder *encoder = get_encoder(env, encoder_pointer);
     if (encoder == NULL) {
@@ -248,7 +248,7 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_resetState0(
 JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_destroyEncoder0(
     JNIEnv *env,
     jobject obj,
-    jlong encoder_pointer
+    const jlong encoder_pointer
 ) {
     if (encoder_pointer == 0) {
         return;
