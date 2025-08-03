@@ -181,6 +181,60 @@ public class OpusEncoderTest {
     }
 
     @Test
+    @DisplayName("Get max packet loss percentage")
+    void getMaxPacketLossPercentage() throws IOException, UnknownPlatformException {
+        try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
+            // Default is 0 (0% -> off by default)
+            assertEquals(0F, encoder.getMaxPacketLossPercentage());
+            encoder.setMaxPacketLossPercentage(0F);
+            assertEquals(0F, encoder.getMaxPacketLossPercentage());
+            encoder.setMaxPacketLossPercentage(1F);
+            assertEquals(1F, encoder.getMaxPacketLossPercentage());
+            encoder.setMaxPacketLossPercentage(0.25F);
+            assertEquals(0.25F, encoder.getMaxPacketLossPercentage());
+            encoder.setMaxPacketLossPercentage(0.5F);
+            assertEquals(0.5F, encoder.getMaxPacketLossPercentage());
+            encoder.setMaxPacketLossPercentage(0.75F);
+            assertEquals(0.75F, encoder.getMaxPacketLossPercentage());
+        }
+    }
+
+    @Test
+    @DisplayName("Set invalid max packet loss percentage")
+    void setInvalidMaxPacketLossPercentage() throws IOException, UnknownPlatformException {
+        try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
+            IllegalArgumentException e1 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPacketLossPercentage(-1F);
+            });
+            assertEquals("Invalid max packet loss percentage: -1", e1.getMessage());
+            IllegalArgumentException e2 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPacketLossPercentage(2F);
+            });
+            assertEquals("Invalid max packet loss percentage: 2", e2.getMessage());
+            IllegalArgumentException e3 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPacketLossPercentage(Float.MIN_VALUE);
+            });
+            assertEquals("Invalid max packet loss percentage: 1.4013e-45", e3.getMessage());
+            IllegalArgumentException e4 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPacketLossPercentage(Float.MAX_VALUE);
+            });
+            assertEquals("Invalid max packet loss percentage: 3.40282e+38", e4.getMessage());
+            IllegalArgumentException e5 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPacketLossPercentage(Float.NaN);
+            });
+            assertEquals("Invalid max packet loss percentage: nan", e5.getMessage());
+            IllegalArgumentException e6 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPacketLossPercentage(Float.POSITIVE_INFINITY);
+            });
+            assertEquals("Invalid max packet loss percentage: inf", e6.getMessage());
+            IllegalArgumentException e7 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                encoder.setMaxPacketLossPercentage(Float.NEGATIVE_INFINITY);
+            });
+            assertEquals("Invalid max packet loss percentage: -inf", e7.getMessage());
+        }
+    }
+
+    @Test
     @DisplayName("Is closed")
     void isClosed() throws IOException, UnknownPlatformException {
         try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {

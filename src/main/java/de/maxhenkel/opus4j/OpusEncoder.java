@@ -46,6 +46,22 @@ public class OpusEncoder implements AutoCloseable {
         }
     }
 
+    private native void setMaxPacketLossPercentage0(long encoderPointer, float maxPacketLossPercentage);
+
+    public void setMaxPacketLossPercentage(float maxPacketLossPercentage) {
+        synchronized (this) {
+            setMaxPacketLossPercentage0(encoder, maxPacketLossPercentage);
+        }
+    }
+
+    private native float getMaxPacketLossPercentage0(long encoderPointer);
+
+    public float getMaxPacketLossPercentage() {
+        synchronized (this) {
+            return getMaxPacketLossPercentage0(encoder);
+        }
+    }
+
     private native byte[] encode0(long encoderPointer, short[] input);
 
     public byte[] encode(short[] input) {

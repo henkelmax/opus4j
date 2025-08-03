@@ -48,18 +48,63 @@ public class OpusDecoder implements AutoCloseable {
 
     private native short[] decode0(long decoderPointer, @Nullable byte[] input, boolean fec);
 
+    /**
+     * Decodes the provided packet.
+     *
+     * @param input the input packet or <code>null</code> to do PLC
+     * @param fec   whether to do PLC
+     * @return the decoded audio
+     * @deprecated use {@link #decode(byte[])} with <code>null</code> to do PLC
+     */
+    @Deprecated
     public short[] decode(@Nullable byte[] input, boolean fec) {
         synchronized (this) {
             return decode0(decoder, input, fec);
         }
     }
 
+    /**
+     * Decodes the provided packet.
+     *
+     * @param input the input packet or <code>null</code> to do PLC
+     * @return the decoded audio
+     */
     public short[] decode(@Nullable byte[] input) {
         return decode(input, false);
     }
 
+    /**
+     * @return a PLC frame
+     * @deprecated use {@link #decode(byte[])} with <code>null</code> to do PLC
+     */
+    @Deprecated
     public short[] decodeFec() {
         return decode(null, true);
+    }
+
+    private native short[][] decodeRecover0(long decoderPointer, byte[] input, int frames);
+
+    /**
+     * Decodes the provided packet and recovers previous lost frames using FEC.
+     * <br>
+     * Note that you need to set {@link OpusEncoder#setMaxPacketLossPercentage(float)}
+     * to a non-zero value to enable FEC, otherwise PLC will be used.
+     *
+     * <br>
+     * If {@param frames} is 1, only the current frame will be decoded.
+     * <br>
+     * If {@param frames} is 2, the previous frame will be recovered using in-band FEC (if enabled).
+     * <br>
+     * If {@param frames} is >=3, all frames other than the current and last frame will use PLC.
+     *
+     * @param input  the input packet
+     * @param frames the number of frames to return (min 1 for just the current frame)
+     * @return an array containing the decoded frames - the length of the array is equal to {@param frames}
+     */
+    public short[][] decode(byte[] input, int frames) {
+        synchronized (this) {
+            return decodeRecover0(decoder, input, frames);
+        }
     }
 
     private native void resetState0(long decoderPointer);

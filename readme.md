@@ -49,6 +49,9 @@ OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP);
 // Sets the max payload size to 1500 bytes
 encoder.setMaxPayloadSize(1500);
 
+// Sets the max packet loss percentage to 1% for in-band FEC
+encoder.setMaxPacketLossPercentage(0.01F);
+
 // Encodes the raw audio
 byte[] encoded = encoder.encode(rawAudio);
 
@@ -70,14 +73,17 @@ byte[] encodedAudio = ...;
 OpusDecoder decoder = new OpusDecoder(48000, 1);
 
 // Sets the frame size to 960 samples
-// If this is not set properly, decoded FEC frames will have the wrong size
+// If this is not set properly, decoded PLC/FEC frames will have the wrong size
 decoder.setFrameSize(960);
 
 // Decodes the encoded audio
 short[] decoded = decoder.decode(encodedAudio);
 
-// Decode a missing packet with FEC (Forward Error Correction)
-decoded = decoder.decodeFec();
+// Decode a missing packet with PLC (Packet Loss Concealment)
+decoded = decoder.decode(null);
+
+// Decode a missing packet and the current packet with FEC (Forward Error Correction)
+short[][] decodedFec = decoder.decode(encodedAudio, 2);
 
 // Resets the decoder state
 decoder.resetState();

@@ -1,18 +1,22 @@
+#include <float.h>
 #include <jni.h>
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include "opus.h"
 #include "exceptions.h"
 
 #define DEFAULT_MAX_PAYLOAD_SIZE 1024
 #define MAX_MAX_PAYLOAD_SIZE 4096
+#define DEFAULT_PACKET_LOSS_PERC 0
 
 typedef struct Encoder {
     OpusEncoder *encoder;
     uint32_t channels;
     jint max_payload_size;
+    jfloat packet_loss_perc;
 } Encoder;
 
 /**
@@ -29,6 +33,23 @@ Encoder *create_encoder(const opus_int32 sample_rate, const int channels, const 
     encoder->encoder = opus_encoder_create(sample_rate, channels, application, &err);
     *error = err;
     if (err < 0) {
+        free(encoder);
+        return NULL;
+    }
+
+    opus_encoder_ctl(encoder->encoder, OPUS_SET_INBAND_FEC(2));
+    *error = err;
+    if (err < 0) {
+        free(encoder->encoder);
+        free(encoder);
+        return NULL;
+    }
+
+    opus_encoder_ctl(encoder->encoder, OPUS_SET_PACKET_LOSS_PERC(DEFAULT_PACKET_LOSS_PERC));
+    encoder->packet_loss_perc = (float) DEFAULT_PACKET_LOSS_PERC / 100.0f;
+    *error = err;
+    if (err < 0) {
+        free(encoder->encoder);
         free(encoder);
         return NULL;
     }
@@ -143,6 +164,39 @@ JNIEXPORT jint JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize0(
         return 0;
     }
     return encoder->max_payload_size;
+}
+
+JNIEXPORT void JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_setMaxPacketLossPercentage0(
+    JNIEnv *env,
+    jobject obj,
+    jlong encoder_pointer,
+    jfloat packet_loss_perc
+) {
+    if (isnan(packet_loss_perc) || isinf(packet_loss_perc) || packet_loss_perc < 0.0f || packet_loss_perc > 1.0f || (
+            packet_loss_perc > 0.0f && packet_loss_perc < FLT_MIN)) {
+        char *message = string_format("Invalid max packet loss percentage: %g", packet_loss_perc);
+        throw_illegal_argument_exception(env, message);
+        free(message);
+        return;
+    }
+    Encoder *encoder = get_encoder(env, encoder_pointer);
+    if (encoder == NULL) {
+        return;
+    }
+    encoder->packet_loss_perc = packet_loss_perc;
+    opus_encoder_ctl(encoder->encoder, OPUS_SET_PACKET_LOSS_PERC((opus_int32) (packet_loss_perc * 100.0f)));
+}
+
+JNIEXPORT jfloat JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPacketLossPercentage0(
+    JNIEnv *env,
+    jobject obj,
+    jlong encoder_pointer
+) {
+    const Encoder *encoder = get_encoder(env, encoder_pointer);
+    if (encoder == NULL) {
+        return 0.0f;
+    }
+    return encoder->packet_loss_perc;
 }
 
 JNIEXPORT jbyteArray JNICALL Java_de_maxhenkel_opus4j_OpusEncoder_encode0(

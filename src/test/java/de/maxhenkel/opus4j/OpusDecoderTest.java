@@ -68,8 +68,8 @@ public class OpusDecoderTest {
     }
 
     @Test
-    @DisplayName("Decode FEC")
-    void decodeFec() throws IOException, UnknownPlatformException {
+    @DisplayName("Decode PLC")
+    void decodePlc() throws IOException, UnknownPlatformException {
         try (OpusDecoder decoder = new OpusDecoder(48000, 1)) {
             decoder.setFrameSize(960);
             short[] decodedFec1 = decoder.decodeFec();
@@ -78,6 +78,41 @@ public class OpusDecoderTest {
             assertEquals(960, decodedFec2.length);
             short[] decodedFec3 = decoder.decode(new byte[0], true);
             assertEquals(960, decodedFec3.length);
+        }
+    }
+
+    @Test
+    @DisplayName("Decode in-band FEC")
+    void decodeInBandFec() throws IOException, UnknownPlatformException {
+        try (OpusEncoder encoder = new OpusEncoder(48000, 1, OpusEncoder.Application.VOIP)) {
+            encoder.setMaxPacketLossPercentage(0.4F);
+            byte[][] encoded = new byte[10][];
+            for (int i = 0; i < encoded.length; i++) {
+                encoded[i] = encoder.encode(new short[960]);
+            }
+
+            try (OpusDecoder decoder = new OpusDecoder(48000, 1)) {
+                decoder.setFrameSize(960);
+                for (int i = 0; i < 5; i++) {
+                    decoder.decode(encoded[i]);
+                }
+                short[][] recovered = decoder.decode(encoded[encoded.length - 1], 5);
+                assertEquals(5, recovered.length);
+                for (short[] shorts : recovered) {
+                    assertEquals(960, shorts.length);
+                }
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("Decode in-band FEC with null")
+    void decodeInBandFecNull() throws IOException, UnknownPlatformException {
+        try (OpusDecoder decoder = new OpusDecoder(48000, 1)) {
+            IllegalArgumentException e1 = assertThrowsExactly(IllegalArgumentException.class, () -> {
+                decoder.decode(null, 5);
+            });
+            assertEquals("Can't recover without input", e1.getMessage());
         }
     }
 
