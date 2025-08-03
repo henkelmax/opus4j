@@ -206,10 +206,10 @@ JNIEXPORT jobjectArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decodeRecove
     jobject obj,
     const jlong decoder_pointer,
     const jbyteArray input,
-    const jint frames_to_recover
+    const jint frames
 ) {
-    if (frames_to_recover <= 0) {
-        throw_illegal_argument_exception(env, "Max frames must be greater than 0");
+    if (frames <= 0) {
+        throw_illegal_argument_exception(env, "Frames must be greater than 0");
         return NULL;
     }
     const Decoder *decoder = get_decoder(env, decoder_pointer);
@@ -225,13 +225,13 @@ JNIEXPORT jobjectArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decodeRecove
     const unsigned char *opus_input = (unsigned char *) (*env)->GetByteArrayElements(env, input, false);
     const int output_length = decoder->frame_size * decoder->channels;
 
-    const jobjectArray recovered = create_short_short_array(env, frames_to_recover, output_length);
+    const jobjectArray recovered = create_short_short_array(env, frames, output_length);
 
     opus_int16 *opus_output = calloc(output_length, sizeof(opus_int16));
 
     // Recover frames if more than one got lost
-    if (frames_to_recover > 2) {
-        for (int i = 0; i < frames_to_recover - 2; i++) {
+    if (frames > 2) {
+        for (int i = 0; i < frames - 2; i++) {
             const int result = opus_decode(decoder->decoder, NULL, 0, opus_output, decoder->frame_size, false);
             if (result < 0) {
                 throw_opus_io_exception(env, result, "Failed to decode");
@@ -251,7 +251,7 @@ JNIEXPORT jobjectArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decodeRecove
         }
     }
     // Recover the last lost frame using FEC
-    if (frames_to_recover > 1) {
+    if (frames > 1) {
         const int result = opus_decode(decoder->decoder, opus_input, input_length, opus_output, decoder->frame_size,
                                        true);
         if (result < 0) {
@@ -268,7 +268,7 @@ JNIEXPORT jobjectArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decodeRecove
             (*env)->ReleaseByteArrayElements(env, input, (jbyte *) opus_input, JNI_ABORT);
             return NULL;
         }
-        fill_short_short_array(env, recovered, frames_to_recover - 2, opus_output, result * decoder->channels);
+        fill_short_short_array(env, recovered, frames - 2, opus_output, result * decoder->channels);
     }
     // Decode the actual frame
     const int result = opus_decode(decoder->decoder, opus_input, input_length, opus_output, decoder->frame_size, false);
@@ -286,7 +286,7 @@ JNIEXPORT jobjectArray JNICALL Java_de_maxhenkel_opus4j_OpusDecoder_decodeRecove
         (*env)->ReleaseByteArrayElements(env, input, (jbyte *) opus_input, JNI_ABORT);
         return NULL;
     }
-    fill_short_short_array(env, recovered, frames_to_recover - 1, opus_output, result * decoder->channels);
+    fill_short_short_array(env, recovered, frames - 1, opus_output, result * decoder->channels);
 
     free(opus_output);
     (*env)->ReleaseByteArrayElements(env, input, (jbyte *) opus_input, JNI_ABORT);
