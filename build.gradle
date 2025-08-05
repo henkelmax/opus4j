@@ -19,6 +19,14 @@ tasks.named('sourcesJar', Jar) {
     exclude 'natives/**'
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir layout.buildDirectory.dir("generated-resources")
+        }
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -30,11 +38,6 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     testImplementation 'org.junit.platform:junit-platform-launcher'
-}
-
-processResources {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    exclude '**/*.gitkeep'
 }
 
 test {
@@ -108,7 +111,7 @@ platforms.each { target ->
     def cmakeListsPath = "../../CMakeLists.txt"
     def cmakePlatformPath = "../../cmake/${target.file}"
     def buildDir = layout.projectDirectory.dir("native/build/${target.res}")
-    def resourceDir = layout.projectDirectory.dir("src/main/resources/natives/${target.res}")
+    def resourceDir = layout.buildDirectory.dir("generated-resources/natives/${target.res}")
     def cSourcesDir = layout.projectDirectory.dir('native/src')
     def outputName = "libopus4j.${target.libExt}"
 
@@ -155,11 +158,7 @@ platforms.each { target ->
         description = "Copy ${target.name} natives into resources"
         dependsOn buildTask
 
-        def libraryFile = buildDir.file(outputName)
-        inputs.file(libraryFile)
-        outputs.file(resourceDir.file(outputName))
-
-        from libraryFile
+        from buildDir.file(outputName)
         into resourceDir
     }
 }
@@ -174,10 +173,6 @@ tasks.named('processResources') {
     dependsOn 'buildAndCopyAllNatives'
 }
 
-tasks.named('clean', Delete).configure { cleanTask ->
-    cleanTask.doFirst {
-        delete project.fileTree('src/main/resources/natives') {
-            exclude '**/.gitkeep'
-        }
-    }
+tasks.named("clean", Delete).configure {
+    delete("native/build")
 }
