@@ -88,13 +88,13 @@ def platforms = [
         [
                 name  : 'macos-x64',
                 file  : 'zig-x86_64-macos.cmake',
-                res   : 'macos-x64',
+                res   : 'mac-x64',
                 libExt: 'dylib'
         ],
         [
                 name  : 'macos-arm64',
                 file  : 'zig-aarch64-macos.cmake',
-                res   : 'macos-aarch64',
+                res   : 'mac-aarch64',
                 libExt: 'dylib'
         ],
 ]
