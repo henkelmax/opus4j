@@ -94,6 +94,20 @@ decoder.resetState();
 decoder.close();
 ```
 
+## Building from Source
+
+### Prerequisites
+
+- [Java](https://www.java.com/en/) 21
+- [Zig](https://ziglang.org/) 0.14.1
+- [Ninja](https://ninja-build.org/)
+
+### Building
+
+``` bash
+./gradlew build
+```
+
 ## Credits
 
 - [Opus](https://opus-codec.org/)
