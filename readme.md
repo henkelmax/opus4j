@@ -2,6 +2,8 @@
 
 A Java wrapper for the [Opus Codec](https://opus-codec.org/) written in C using JNI.
 
+Java 8+ is required to use this library.
+
 ## Usage
 
 **Maven**
