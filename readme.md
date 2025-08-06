@@ -94,6 +94,15 @@ decoder.resetState();
 decoder.close();
 ```
 
+## Supported Platforms
+
+- Windows x86_64
+- Windows aarch64
+- Linux x86_64
+- Linux aarch64
+- macOS x86_64
+- macOS aarch64
+
 ## Building from Source
 
 ### Prerequisites
