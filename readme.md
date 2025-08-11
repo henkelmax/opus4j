@@ -4,6 +4,15 @@ A Java wrapper for the [Opus Codec](https://opus-codec.org/) written in C using 
 
 Java 8+ is required to use this library.
 
+## Supported Platforms
+
+- `Windows x86_64`
+- `Windows aarch64`
+- `macOS x86_64`
+- `macOS aarch64`
+- `Linux x86_64`
+- `Linux aarch64`
+
 ## Usage
 
 **Maven**
@@ -95,15 +104,6 @@ decoder.resetState();
 // Closes the decoder - Not calling this will cause a memory leak!
 decoder.close();
 ```
-
-## Supported Platforms
-
-- Windows x86_64
-- Windows aarch64
-- Linux x86_64
-- Linux aarch64
-- macOS x86_64
-- macOS aarch64
 
 ## Building from Source
 
