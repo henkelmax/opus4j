@@ -19,10 +19,12 @@ tasks.named('sourcesJar', Jar) {
     exclude 'natives/**'
 }
 
+def generatedResourcesDir = layout.buildDirectory.dir("generated-resources")
+
 sourceSets {
     main {
         resources {
-            srcDir layout.buildDirectory.dir("generated-resources")
+            srcDir generatedResourcesDir
         }
     }
 }
@@ -111,7 +113,7 @@ platforms.each { target ->
     def cmakeListsPath = "../../CMakeLists.txt"
     def cmakePlatformPath = "../../cmake/${target.file}"
     def buildDir = layout.projectDirectory.dir("native/build/${target.res}")
-    def resourceDir = layout.buildDirectory.dir("generated-resources/natives/${target.res}")
+    def resourceDir = generatedResourcesDir.get().dir("natives/${target.res}")
     def cSourcesDir = layout.projectDirectory.dir('native/src')
     def outputName = "libopus4j.${target.libExt}"
 
