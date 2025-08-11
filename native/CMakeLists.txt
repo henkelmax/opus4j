@@ -53,10 +53,4 @@ target_link_libraries(opus4j PRIVATE
         opus
 )
 
-if (UNIX)
-    set_target_properties(opus4j PROPERTIES
-            POSITION_INDEPENDENT_CODE ON
-    )
-endif ()
-
 message(STATUS "C compiler executable: ${CMAKE_C_COMPILER}")
