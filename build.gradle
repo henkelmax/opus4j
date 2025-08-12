@@ -32,6 +32,7 @@ sourceSets {
 
 repositories {
     mavenCentral()
+    maven { url = 'https://maven.maxhenkel.de/repository/public' }
 }
 
 dependencies {
