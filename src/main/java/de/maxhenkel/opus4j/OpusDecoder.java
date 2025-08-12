@@ -19,8 +19,10 @@ public class OpusDecoder implements AutoCloseable {
      * @throws IOException              if the native library could not be extracted
      */
     public OpusDecoder(int sampleRate, int channels) throws IOException, UnknownPlatformException {
-        NativeInitializer.load("libopus4j");
-        decoder = createDecoder0(sampleRate, channels);
+        synchronized (OpusDecoder.class) {
+            NativeInitializer.load("libopus4j");
+            decoder = createDecoder0(sampleRate, channels);
+        }
     }
 
     private static native String getOpusVersion0();
