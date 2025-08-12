@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'com.gradleup.shadow' version "${shadow_version}"
     id 'net.linguica.maven-settings' version "${maven_settings_version}"
 }
 
@@ -36,6 +37,8 @@ repositories {
 dependencies {
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
+    implementation "de.maxhenkel.native-utils:native-utils:${nativeutils_version}"
+
     testImplementation platform("org.junit:junit-bom:${junit_version}")
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
@@ -45,6 +48,12 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+shadowJar {
+    archiveClassifier = ''
+    relocate("de.maxhenkel.nativeutils", "de.maxhenkel.opus4j")
+}
+tasks.assemble.dependsOn tasks.shadowJar
 
 publishing {
     publications {

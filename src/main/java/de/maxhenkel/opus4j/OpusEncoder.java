@@ -1,5 +1,8 @@
 package de.maxhenkel.opus4j;
 
+import de.maxhenkel.nativeutils.NativeInitializer;
+import de.maxhenkel.nativeutils.UnknownPlatformException;
+
 import java.io.IOException;
 
 public class OpusEncoder implements AutoCloseable {
@@ -16,7 +19,7 @@ public class OpusEncoder implements AutoCloseable {
      * @throws IOException              if the native library could not be extracted
      */
     public OpusEncoder(int sampleRate, int channels, Application application) throws IOException, UnknownPlatformException {
-        Opus.load();
+        NativeInitializer.load("libopus4j");
         encoder = createEncoder0(sampleRate, channels, application);
     }
 
