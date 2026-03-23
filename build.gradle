@@ -6,7 +6,9 @@ plugins {
 }
 
 group = 'de.maxhenkel.opus4j'
-archivesBaseName = 'opus4j'
+base {
+    archivesName = 'opus4j'
+}
 version = library_version
 
 java {
